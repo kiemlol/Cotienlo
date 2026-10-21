@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Orange 12/10 (KE_HOACH_DIEN_THOAI bước 4): không phóng to bằng hai ngón / chạm đúp (iPhone bỏ qua user-scalable, chặn thêm ở main.tsx) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+    <!-- người dùng 19/10: chế độ tối của trình duyệt (Chrome Auto Dark, trình duyệt điện thoại) tự đảo chữ trên nền giấy thành chữ sáng, không đọc được. Game tự vẽ màu riêng: chỉ dùng giao diện sáng -->
+    <meta name="color-scheme" content="only light" />
+    <!-- tiện ích Dark Reader: thẻ này bảo tiện ích không đổi màu trang -->
+    <meta name="darkreader-lock" />
+    <title>Cổ Tiên Lộ: game Cổ Chân Nhân nhập vai online, nuôi cổ tu luyện ở Cổ Giới</title>
+    <!-- River 19/10 (người dùng: tìm Google ra đoạn chữ màn đăng nhập): mô tả trang, đường dẫn chuẩn, thẻ chia sẻ Facebook / Zalo -->
+    <meta name="description" content="Cổ Tiên Lộ: game Cổ Chân Nhân nhập vai online 2D, lấy cảm hứng từ thế giới cổ sư Cổ Giới của bộ truyện. Nuôi cổ, luyện hóa, tu luyện từng chuyển, săn thú vương, lôi đài, bang hội. Chơi ngay trên trình duyệt, máy tính hay điện thoại, không cần cài. Game fan làm, phi chính thức." />
+    <meta name="keywords" content="Cổ Tiên Lộ, Cổ Chân Nhân game, game Cổ Chân Nhân, Cổ Giới, game cổ sư, nuôi cổ, game nhập vai online, game tu tiên online, cotienlo" />
+    <link rel="canonical" href="https://cotienlo.com/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cổ Tiên Lộ" />
+    <meta property="og:url" content="https://cotienlo.com/" />
+    <meta property="og:title" content="Cổ Tiên Lộ: game Cổ Chân Nhân nhập vai online, nuôi cổ tu luyện ở Cổ Giới" />
+    <meta property="og:description" content="Nuôi cổ, luyện hóa, tu luyện từng chuyển, săn thú vương, lôi đài 3 đấu 3, bang hội. Chơi ngay trên trình duyệt, không cần cài. Game fan làm, lấy cảm hứng từ Cổ Chân Nhân." />
+    <meta property="og:image" content="https://cotienlo.com/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="vi_VN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Cổ Tiên Lộ","url":"https://cotienlo.com/","inLanguage":"vi","genre":["Nhập vai","MMORPG"],"gamePlatform":["Trình duyệt web","Máy tính","Điện thoại"],"applicationCategory":"Game","operatingSystem":"Web","alternateName":["Cổ Chân Nhân game","Cổ Giới"],"description":"Game Cổ Chân Nhân nhập vai online 2D, lấy cảm hứng từ thế giới cổ sư Cổ Giới. Game fan làm, phi chính thức.","image":"https://cotienlo.com/og.jpg"}</script>
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon_32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="icons/icon_48.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon_180.png" />
+    <!-- web app (Thêm vào Màn hình chính): iPhone cần để nhận thông báo đẩy, GDD §12.4 / HUD bản 101 -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <!-- River 19/10 (tối ưu mạng di động): dữ liệu game, chữ, bảng tra hình tải song song với gói JS, không chờ JS chạy xong mới xin
+      (màn đăng nhập cần cả ba: ui/App.tsx). Đường dẫn + crossorigin khớp đúng lời gọi fetch() trong data.ts / text.ts / bangTraHinh.ts -->
+    <link rel="preload" href="data/game.json" as="fetch" crossorigin />
+    <link rel="preload" href="data/text_vi.json" as="fetch" crossorigin />
+    <link rel="preload" href="assets/visual/index.json" as="fetch" crossorigin />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <style>:root{--lightningcss-light:initial;--lightningcss-dark: ;color-scheme:light only}html,body{overscroll-behavior:none;background:#0e0f0c;height:100%;margin:0;overflow:hidden}body{width:100%;position:fixed;inset:0}#game{touch-action:none;position:fixed;inset:0}html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}input,textarea,[contenteditable=true]{-webkit-user-select:text;user-select:text}#ui{touch-action:manipulation}@font-face{font-family:Philosopher;font-style:normal;font-weight:400;font-display:swap;src:url(fonts/philosopher/philosopher-latin-400-normal.woff2)format("woff2");unicode-range:U+??,U+131,U+152-153,U+2BB-2BC,U+2C6,U+2DA,U+2DC,U+304,U+308,U+329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Philosopher;font-style:normal;font-weight:400;font-display:swap;src:url(fonts/philosopher/philosopher-vietnamese-400-normal.woff2)format("woff2");unicode-range:U+102-103,U+110-111,U+128-129,U+168-169,U+1A0-1A1,U+1AF-1B0,U+300-301,U+303-304,U+308-309,U+323,U+329,U+1EA0-1EF9,U+20AB}@font-face{font-family:Philosopher;font-style:normal;font-weight:700;font-display:swap;src:url(fonts/philosopher/philosopher-latin-700-normal.woff2)format("woff2");unicode-range:U+??,U+131,U+152-153,U+2BB-2BC,U+2C6,U+2DA,U+2DC,U+304,U+308,U+329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}@font-face{font-family:Philosopher;font-style:normal;font-weight:700;font-display:swap;src:url(fonts/philosopher/philosopher-vietnamese-700-normal.woff2)format("woff2");unicode-range:U+102-103,U+110-111,U+128-129,U+168-169,U+1A0-1A1,U+1AF-1B0,U+300-301,U+303-304,U+308-309,U+323,U+329,U+1EA0-1EF9,U+20AB}@font-face{font-family:Galmuri11;font-style:normal;font-weight:400;font-display:swap;src:url(fonts/galmuri11-vi.woff)format("woff")}:root{--font-chu:system-ui, sans-serif;--font-tieu-de:"Noto Serif", "Times New Roman", Georgia, serif}#ui{pointer-events:none;font-family:var(--font-chu);color:#e8e2d0;position:fixed;inset:0}#ui button,#ui input,#ui textarea,#ui select{font-family:inherit}#ui *{pointer-events:auto}</style>
+    <script type="module" crossorigin src="/assets/index-CKacMd2p.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BW1ahqqw.css">
+  </head>
+  <body>
+    <div id="game"></div>
+    <div id="ui"></div>
+    <noscript>
+      <h1>Cổ Tiên Lộ</h1>
+      <p>Game Cổ Chân Nhân nhập vai online 2D, lấy cảm hứng từ thế giới cổ sư Cổ Giới của bộ truyện Cổ Chân Nhân: nuôi cổ, luyện hóa, tu luyện từng chuyển, chọn lưu phái,
+        săn thú vương, đi phó bản cùng tổ, lôi đài 1 đấu 1 và 3 đấu 3, chiến trường, bang hội. Chơi trên trình duyệt, cần bật JavaScript.
+        Game fan làm, phi chính thức, không liên quan tới tác giả hay đơn vị giữ bản quyền.</p>
+    </noscript>
+  </body>
+</html>

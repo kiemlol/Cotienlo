@@ -1,0 +1,1 @@
+{"name":"cotienlo-independent-game","version":"1.0.0","private":true,"type":"module","scripts":{"build":"node scripts/build.mjs","start":"node server.mjs","check":"node --check src/runtime.mjs"},"engines":{"node":">=20"}}
