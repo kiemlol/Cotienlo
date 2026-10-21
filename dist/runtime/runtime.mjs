@@ -4,7 +4,7 @@ import {createProfile} from './profile-defaults.mjs';
 const baseFetch=window.fetch.bind(window);
 window.fetch=(input,init)=>{
  const path=new URL(typeof input==='string'?input:input.url,location.href).pathname;
- if(path==='/api/tai-khoan/bat')return Promise.resolve(Response.json({bat:false}));
+ if(path==='/api/tai-khoan/bat'||path==='/ws/api/tai-khoan/bat')return Promise.resolve(Response.json({bat:false}));
  return baseFetch(input,init);
 };
 const dataPromise=baseFetch('/data/game.json').then(r=>r.json());
@@ -30,7 +30,7 @@ class Room{
  constructor(opts,data,text){
   current?.stop();current=this;this.data=data;this.text=text;this.options=opts;
   this.roomId='doc-hanh';this.sessionId='hero';this.reconnection={};this.onStateChange=signal();this.onLeave=signal();this.onError=signal();
-  this.listeners=new Map();this.messages=new Map();this.cooldowns={};this.lastSave=0;this.meditating=false;
+  this.listeners=new Map();this.messages=new Map();this.cooldowns={};this.lastSave=0;this.meditating=false;this.unsupported=new Set();this.started=Date.now();
   this.key='ctl.playable.v1.'+(opts.key||opts.pid||'local');
   let saved;try{saved=JSON.parse(localStorage.getItem(this.key)||'null')}catch{}
   this.profile=saved?.profile||createProfile(opts.ten,opts.gioiTinh,opts.mauAo);
@@ -75,14 +75,26 @@ class Room{
   if(type==='mini'){if(p.huy)this.meditating=false;return}
   if(type==='dot_pha')return this.breakthrough();
   if(type==='chat'){this.emit('chat',{ten:this.player.ten,noi:String(p.noi||p.text||p.noiDung||''),kenh:'vung'});return}
-  if(['ping','bang_tb','tin_moi','nv','push','ban_be','thu','khai_mac','huong_dan'].includes(type))return;
+  if(['ping','bang_tb','tin_moi','nv','push','ban_be','thu','khai_mac','huong_dan','manh_len_xem','giai_dau','loan_chien','ghep_to'].includes(type))return;
   if(type==='hoi_sinh'){this.player.hp=this.player.hpMax;this.emit('hoi_sinh',{});this.refresh();return}
   if(type==='co'){this.notify('Cổ khởi hành đã được luyện hóa. Các nhánh cổ nâng cao chưa có trong bản độc lập.');return}
   if(type==='roi')return this.travel('zone_ta_gia_trai');
-  if(!this.cooldowns[type]||Date.now()>this.cooldowns[type]){this.cooldowns[type]=Date.now()+5000;this.notify('Tính năng này chưa được dựng trong bản chơi đơn. Dùng menu “Hành trình” để săn thú, hái thuốc, tu luyện và chuyển vùng.');}
+  this.unsupported.add(type);
+  if(Date.now()-this.started>5000&&(!this.cooldowns[type]||Date.now()>this.cooldowns[type])){this.cooldowns[type]=Date.now()+5000;this.notify('Tính năng này chưa được dựng trong bản chơi đơn. Dùng menu “Hành trình” để săn thú, hái thuốc, tu luyện và chuyển vùng.');}
  }
  attack(p,type){
-  const special=p.o!=='tay',now=Date.now();if(now<(this.cooldowns.attack||0))return;
+  const special=p.o!=='tay',now=Date.now();
+  const gu=special?this.profile.o[p.o]?.loai:null;
+  if(gu==='gu_sinh_tuc_thao'){
+   if(now<(this.cooldowns.heal||0))return;
+   if(this.player.cn<6){this.notify('Cần 6 chân nguyên để trị thương.');return}
+   this.cooldowns.heal=now+5000;this.player.cn-=6;this.player.hp=Math.min(this.player.hpMax,this.player.hp+45);
+   this.emit('fx',{k:'trung',id:this.sessionId,tu:this.sessionId,gu});this.notify('Sinh Tức Thảo · +45 sinh lực');this.refresh();return;
+  }
+  if(gu==='gu_thu_bi'){this.guard=!this.guard;this.profile.o[p.o].bat=this.guard;this.notify(this.guard?'Thú Bì Cổ đang bảo hộ · giảm 12% sát thương, tốn chân nguyên theo thời gian.':'Đã tắt Thú Bì Cổ.');this.refresh();return}
+  if(type==='sat_chieu'){this.notify('Sát chiêu nâng cao chưa được mở. Dùng đòn đánh hoặc Nguyệt Quang Cổ.');return}
+  if(special&&!gu){this.notify('Ô này chưa lắp cổ trùng.');return}
+  if(now<(this.cooldowns.attack||0))return;
   if(special&&this.player.cn<8){this.notify('Không đủ chân nguyên. Nhấn X vận khí.');return}
   const enemies=[...this.state.actors.values()].filter(a=>a.loai==='thu'&&a.hp>0);
   const target=this.state.actors.get(p.muc)||enemies.sort((a,b)=>Math.hypot(a.x-this.player.x,a.y-this.player.y)-Math.hypot(b.x-this.player.x,b.y-this.player.y))[0];
@@ -102,11 +114,12 @@ class Room{
  travel(zone){if(!this.data.zones[zone])return;this.save();this.emit('chuyen',{zone,inst:zone.startsWith('inst_')})}
  tick(){
   const now=Date.now();this.state.now=now;
+  if(this.guard){this.player.cn=Math.max(0,this.player.cn-.55);if(this.player.cn<=0){this.guard=false;this.profile.o[1].bat=false}this.refresh()}
   if(this.meditating){this.progress.training=Math.min(100,this.progress.training+1);this.player.hp=Math.min(this.player.hpMax,this.player.hp+2);this.player.cn=Math.min(this.player.cnMax,this.player.cn+3);this.refresh()}
   for(const a of this.state.actors.values()){
    if(a.loai!=='thu')continue;
    if(a.respawn&&now>a.respawn){a.hp=a.hpMax;a.x=a.sx;a.y=a.sy;a.respawn=0;this.changed(a)}
-   if(a.hp>0&&a.aggro>now){const dx=this.player.x-a.x,dy=this.player.y-a.y,d=Math.hypot(dx,dy);if(d>1.4){a.x+=dx/d*.35;a.y+=dy/d*.35;a.dong='walk';this.changed(a)}else if(now>(a.nextHit||0)){a.nextHit=now+1400;this.player.hp=Math.max(0,this.player.hp-8);this.refresh();if(this.player.hp<=0){this.player.hp=this.player.hpMax;this.player.cn=this.player.cnMax;this.notify('Bị trọng thương. Đã được cứu chữa; không mất vật phẩm.');a.aggro=0;this.refresh()}}}
+   if(a.hp>0&&a.aggro>now){const dx=this.player.x-a.x,dy=this.player.y-a.y,d=Math.hypot(dx,dy);if(d>1.4){a.x+=dx/d*.35;a.y+=dy/d*.35;a.dong='walk';this.changed(a)}else if(now>(a.nextHit||0)){a.nextHit=now+1400;this.player.hp=Math.max(0,this.player.hp-8*(this.guard?.88:1));this.emit('fx',{k:'so',id:this.sessionId,v:8*(this.guard?.88:1),tu:a.id,loai:'dmg'});this.refresh();if(this.player.hp<=0){this.player.hp=this.player.hpMax;this.player.cn=this.player.cnMax;this.notify('Bị trọng thương. Đã được cứu chữa; không mất vật phẩm.');a.aggro=0;this.refresh()}}}
   }
   this.onStateChange.emit(this.state);if(now-this.lastSave>4000)this.save();
  }
