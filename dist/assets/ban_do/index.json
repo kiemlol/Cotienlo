@@ -1,0 +1,192 @@
+{
+ "zone_khe_coc": {
+  "file": "zone_khe_coc.webp",
+  "w": 768,
+  "h": 576,
+  "px_m": 8,
+  "tay": "tay/zone_khe_coc.webp"
+ },
+ "zone_ta_gia_trai": {
+  "file": "zone_ta_gia_trai.webp",
+  "w": 512,
+  "h": 384,
+  "px_m": 8,
+  "tay": "tay/zone_ta_gia_trai.webp"
+ },
+ "inst_gia_vien": {
+  "file": "inst_gia_vien.webp",
+  "w": 192,
+  "h": 144,
+  "px_m": 8
+ },
+ "inst_ham_ruou": {
+  "file": "inst_ham_ruou.webp",
+  "w": 224,
+  "h": 176,
+  "px_m": 8
+ },
+ "inst_hang_heo": {
+  "file": "inst_hang_heo.webp",
+  "w": 608,
+  "h": 352,
+  "px_m": 8
+ },
+ "inst_khai_khieu": {
+  "file": "inst_khai_khieu.webp",
+  "w": 320,
+  "h": 512,
+  "px_m": 8
+ },
+ "inst_loi_dai_hoc_duong": {
+  "file": "inst_loi_dai_hoc_duong.webp",
+  "w": 240,
+  "h": 240,
+  "px_m": 8
+ },
+ "inst_thi_luyen_ba_cua": {
+  "file": "inst_thi_luyen_ba_cua.webp",
+  "w": 768,
+  "h": 240,
+  "px_m": 8
+ },
+ "zone_bac_linh": {
+  "file": "zone_bac_linh.webp",
+  "w": 1536,
+  "h": 1152,
+  "px_m": 8,
+  "tay": "tay/zone_bac_linh.webp"
+ },
+ "zone_ben_thuong": {
+  "file": "zone_ben_thuong.webp",
+  "w": 768,
+  "h": 576,
+  "px_m": 8,
+  "tay": "tay/zone_ben_thuong.webp"
+ },
+ "zone_hac_thuy": {
+  "file": "zone_hac_thuy.webp",
+  "w": 2400,
+  "h": 2080,
+  "px_m": 8,
+  "tay": "tay/zone_hac_thuy.webp"
+ },
+ "zone_mo_cu": {
+  "file": "zone_mo_cu.webp",
+  "w": 768,
+  "h": 512,
+  "px_m": 8,
+  "tay": "tay/zone_mo_cu.webp"
+ },
+ "zone_vu_linh_ha": {
+  "file": "zone_vu_linh_ha.webp",
+  "w": 1024,
+  "h": 768,
+  "px_m": 8,
+  "tay": "tay/zone_vu_linh_ha.webp"
+ },
+ "zone_luc_bien": {
+  "file": "zone_luc_bien.webp",
+  "w": 1536,
+  "h": 1152,
+  "px_m": 8,
+  "tay": "tay/zone_luc_bien.webp"
+ },
+ "zone_lang_coc": {
+  "file": "zone_lang_coc.webp",
+  "w": 1536,
+  "h": 1280,
+  "px_m": 8,
+  "tay": "tay/zone_lang_coc.webp"
+ },
+ "zone_mach_sau": {
+  "file": "zone_mach_sau.webp",
+  "w": 1024,
+  "h": 1024,
+  "px_m": 8,
+  "tay": "tay/zone_mach_sau.webp"
+ },
+ "inst_dien_vo_ben_thuong": {
+  "file": "inst_dien_vo_ben_thuong.webp",
+  "w": 240,
+  "h": 240,
+  "px_m": 8
+ },
+ "inst_dot_pha": {
+  "file": "inst_dot_pha.webp",
+  "w": 128,
+  "h": 112,
+  "px_m": 8
+ },
+ "inst_ham_mo": {
+  "file": "inst_ham_mo.webp",
+  "w": 576,
+  "h": 320,
+  "px_m": 8
+ },
+ "inst_lang_coc": {
+  "file": "inst_lang_coc.webp",
+  "w": 672,
+  "h": 384,
+  "px_m": 8
+ },
+ "inst_loi_dai": {
+  "file": "inst_loi_dai.webp",
+  "w": 120,
+  "h": 120,
+  "px_m": 4
+ },
+ "inst_loi_dai_ba_ba": {
+  "file": "inst_loi_dai_ba_ba.webp",
+  "w": 240,
+  "h": 240,
+  "px_m": 8
+ },
+ "inst_mo_cu_tang_sau": {
+  "file": "inst_mo_cu_tang_sau.webp",
+  "w": 1024,
+  "h": 384,
+  "px_m": 8
+ },
+ "inst_o_soi": {
+  "file": "inst_o_soi.webp",
+  "w": 672,
+  "h": 384,
+  "px_m": 8
+ },
+ "inst_tt_dau_bong": {
+  "file": "inst_tt_dau_bong.webp",
+  "w": 240,
+  "h": 240,
+  "px_m": 8
+ },
+ "inst_tt_do_thach": {
+  "file": "inst_tt_do_thach.webp",
+  "w": 240,
+  "h": 240,
+  "px_m": 8
+ },
+ "inst_tt_giu_den": {
+  "file": "inst_tt_giu_den.webp",
+  "w": 240,
+  "h": 240,
+  "px_m": 8
+ },
+ "inst_dam_hac_thuy": {
+  "file": "inst_dam_hac_thuy.webp",
+  "w": 640,
+  "h": 448,
+  "px_m": 8
+ },
+ "inst_dem_trang": {
+  "file": "inst_dem_trang.webp",
+  "w": 512,
+  "h": 384,
+  "px_m": 8
+ },
+ "inst_chien_truong": {
+  "file": "inst_chien_truong.webp",
+  "w": 1280,
+  "h": 960,
+  "px_m": 8
+ }
+}

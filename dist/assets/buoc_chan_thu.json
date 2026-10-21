@@ -1,0 +1,76 @@
+{
+ "chung": {
+  "cach_m": 0.55,
+  "song_ms": 800,
+  "toi_da": 8,
+  "toi_da_dien_thoai": 4,
+  "lech_chan_m": 0.08
+ },
+ "mau": {
+  "hoa_dao": {
+   "hinh": "fx_buoc_hoa_dao",
+   "rong_m": 1.332,
+   "duyet": false
+  },
+  "tuyet": {
+   "hinh": "fx_buoc_tuyet",
+   "rong_m": 1.146,
+   "duyet": false
+  },
+  "than_lua": {
+   "hinh": "fx_buoc_than_lua",
+   "rong_m": 1.239,
+   "duyet": false
+  },
+  "gon_nuoc": {
+   "hinh": "fx_buoc_gon_nuoc",
+   "rong_m": 0.989,
+   "duyet": false
+  },
+  "buom": {
+   "hinh": "fx_buoc_buom",
+   "rong_m": 1.422,
+   "duyet": false
+  },
+  "huyet_an": {
+   "hinh": "fx_buoc_huyet_an",
+   "rong_m": 1.072,
+   "duyet": false
+  },
+  "vip_kim_lien": {
+   "hinh": "fx_buoc_vip_kim_lien",
+   "rong_m": 1.176,
+   "duyet": true
+  },
+  "vip_nguyet_hoa": {
+   "hinh": "fx_buoc_vip_nguyet_hoa",
+   "rong_m": 1.176,
+   "duyet": true
+  },
+  "vip_luu_tinh": {
+   "hinh": "fx_buoc_vip_luu_tinh",
+   "rong_m": 1.188,
+   "duyet": true
+  },
+  "tho_nui": {
+   "hinh": "fx_buoc_tho_nui",
+   "rong_m": 1.363,
+   "duyet": true
+  },
+  "lon_rung": {
+   "hinh": "fx_buoc_lon_rung",
+   "rong_m": 1.239,
+   "duyet": true
+  },
+  "tinh_thach": {
+   "hinh": "fx_buoc_tinh_thach",
+   "rong_m": 1.67,
+   "duyet": true
+  },
+  "lua_do": {
+   "hinh": "fx_buoc_lua_do",
+   "rong_m": 1.324,
+   "duyet": true
+  }
+ }
+}
