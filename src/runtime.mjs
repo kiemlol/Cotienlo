@@ -75,7 +75,7 @@ class Room{
   if(type==='mini'){if(p.huy)this.meditating=false;return}
   if(type==='dot_pha')return this.breakthrough();
   if(type==='chat'){this.emit('chat',{ten:this.player.ten,noi:String(p.noi||p.text||p.noiDung||''),kenh:'vung'});return}
-  if(['ping','bang_tb','tin_moi','nv','push','ban_be','thu','khai_mac','huong_dan'].includes(type))return;
+  if(['ping','bang_tb','tin_moi','nv','push','ban_be','thu','khai_mac','huong_dan','manh_len_xem','giai_dau','loan_chien','ghep_to'].includes(type))return;
   if(type==='hoi_sinh'){this.player.hp=this.player.hpMax;this.emit('hoi_sinh',{});this.refresh();return}
   if(type==='co'){this.notify('Cổ khởi hành đã được luyện hóa. Các nhánh cổ nâng cao chưa có trong bản độc lập.');return}
   if(type==='roi')return this.travel('zone_ta_gia_trai');
@@ -119,7 +119,7 @@ class Room{
   for(const a of this.state.actors.values()){
    if(a.loai!=='thu')continue;
    if(a.respawn&&now>a.respawn){a.hp=a.hpMax;a.x=a.sx;a.y=a.sy;a.respawn=0;this.changed(a)}
-   if(a.hp>0&&a.aggro>now){const dx=this.player.x-a.x,dy=this.player.y-a.y,d=Math.hypot(dx,dy);if(d>1.4){a.x+=dx/d*.35;a.y+=dy/d*.35;a.dong='walk';this.changed(a)}else if(now>(a.nextHit||0)){a.nextHit=now+1400;this.player.hp=Math.max(0,this.player.hp-8);this.refresh();if(this.player.hp<=0){this.player.hp=this.player.hpMax;this.player.cn=this.player.cnMax;this.notify('Bị trọng thương. Đã được cứu chữa; không mất vật phẩm.');a.aggro=0;this.refresh()}}}
+   if(a.hp>0&&a.aggro>now){const dx=this.player.x-a.x,dy=this.player.y-a.y,d=Math.hypot(dx,dy);if(d>1.4){a.x+=dx/d*.35;a.y+=dy/d*.35;a.dong='walk';this.changed(a)}else if(now>(a.nextHit||0)){a.nextHit=now+1400;this.player.hp=Math.max(0,this.player.hp-8*(this.guard?.88:1));this.emit('fx',{k:'so',id:this.sessionId,v:8*(this.guard?.88:1),tu:a.id,loai:'dmg'});this.refresh();if(this.player.hp<=0){this.player.hp=this.player.hpMax;this.player.cn=this.player.cnMax;this.notify('Bị trọng thương. Đã được cứu chữa; không mất vật phẩm.');a.aggro=0;this.refresh()}}}
   }
   this.onStateChange.emit(this.state);if(now-this.lastSave>4000)this.save();
  }
