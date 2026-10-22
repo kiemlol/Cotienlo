@@ -11,20 +11,26 @@ npm run build
 npm start
 ```
 
-Mở http://127.0.0.1:4175. Có thể phục vụ thư mục `dist/` bằng static host. Build chạy lại được; giữ nguyên `dist/assets/index-CKacMd2p.js` làm đầu vào gốc và `src/index.original.html` làm template. Không cần repo recovery ở đường dẫn tuyệt đối.
+Mở http://127.0.0.1:4175. Có thể phục vụ thư mục `dist/` bằng static host. Build chạy lại được; giữ nguyên `dist/assets/index-ChkNmBLw.js` làm đầu vào gốc và `src/index.original.html` làm template. Không cần repo recovery ở đường dẫn tuyệt đối.
+
+## Cập nhật 22/10/2026
+
+Client hiện dùng bundle `index-ChkNmBLw.js` và catalog 55 vùng / 377 cổ / 379 vật phẩm / 70 công thức. Xem `reports/INTEGRATION-2026-10-22.md` để biết bằng chứng và phạm vi; `dist/reconstruction/` có bảng kiểm kê 78 hệ và gói mã client giải rối.
 
 ## Đã dựng
 
 - Tạo tên/giới tính/màu áo bằng giao diện gốc; vào bản đồ Tạ gia trại.
 - Di chuyển, va chạm, camera, minimap, animation và UI gốc.
-- Quái có HP, đuổi đánh, hồi sinh; dùng đòn đánh/cổ trùng để hạ quái, nhận vật phẩm/nguyên thạch.
+- Mở đầu Giấc mơ với Tri Thu, bộ cổ Ngũ chuyển, hướng dẫn và cảnh tỉnh dậy trước khi vào trại. Bản lưu cũ được giữ, có chơi lại mở đầu.
+- Quái có HP, đuổi đánh, hồi sinh; hệ combat đọc data, có tầm/AoE/CN/cooldown/DoT/khiên/khống chế/cánh. 226 Gu có xử lý đầy đủ hoặc một phần, 151 báo chưa hỗ trợ.
 - NPC trò chuyện/hồi phục; thu thập thảo dược; vận khí, tích tu vi, đột phá.
-- Nhiệm vụ khởi hành và phần thưởng; 6 vùng đi đến từ menu Hành trình.
+- Lắp/tháo, cho ăn, luyện hóa cổ; thuốc, mua/bán và công thức hợp luyện có kiểm tra tài nguyên. Tu luyện dùng mini UI gốc. Một số luật vẫn là reconstruction.
+- Nhiệm vụ khởi hành chơi đơn và phần thưởng, không phải cây nhiệm vụ gốc; 16 vùng thế giới đi đến từ menu Hành trình.
 - Tự lưu mỗi 4 giây trên trình duyệt; xuất file JSON dự phòng. Tiến trình không đồng bộ giữa thiết bị. Xóa dữ liệu trang sẽ mất bản lưu.
 
 ## Giới hạn
 
-Đây là mô phỏng chơi đơn. Chưa có Colyseus backend thật, multiplayer/PvP, bang hội, giao dịch, tài khoản trực tuyến, hệ nhiệm vụ nguyên bản, đầy đủ chế tạo/nghề nghiệp hoặc toàn bộ luật cổ trùng. Chỉ số/cân bằng/phần thưởng được dựng độc lập. Các nút ngoài phạm vi được ẩn hoặc báo rõ chưa hỗ trợ. Asset giữ nguồn gốc của chủ sở hữu; chưa xác minh giấy phép tái phân phối thương mại.
+Đây là mô phỏng chơi đơn. Chưa có Colyseus backend thật, multiplayer/PvP, bang hội, giao dịch, tài khoản trực tuyến, cây nhiệm vụ ngoài intro, đầy đủ chế tạo/nghề nghiệp hoặc toàn bộ luật cổ trùng. Chỉ số/cân bằng/phần thưởng và trigger/timing của intro được dựng độc lập. Các nút ngoài phạm vi được ẩn hoặc báo rõ chưa hỗ trợ. Asset giữ nguồn gốc của chủ sở hữu; chưa xác minh giấy phép tái phân phối thương mại.
 
 ## Triển khai
 

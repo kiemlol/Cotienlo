@@ -1,0 +1,6 @@
+const names={partial_local:'Chơi đơn · một phần',local_ui:'Giao diện cục bộ',ui_only:'Mới có giao diện',server_dependent:'Cần backend',absent:'Chưa dựng'};
+const matrix=await fetch('feature-matrix.json').then(r=>{if(!r.ok)throw Error('Không tải được kiểm kê');return r.json()});
+const search=document.querySelector('#search'),body=document.querySelector('#rows');
+function render(){const term=search.value.trim().toLowerCase(),rows=matrix.features.filter(f=>[f.id,f.name,f.clone_support_and_gaps,...f.outgoing,...f.incoming].join(' ').toLowerCase().includes(term));body.replaceChildren();document.querySelector('#count').textContent=`${rows.length} / ${matrix.features.length} hệ`;
+ for(const f of rows){const row=document.createElement('tr'),title=document.createElement('td'),status=document.createElement('td'),detail=document.createElement('td'),tag=document.createElement('span');title.textContent=f.name;tag.className='status '+f.clone_status;tag.textContent=names[f.clone_status]||f.clone_status;status.append(tag);detail.textContent=f.clone_support_and_gaps;const meta=document.createElement('small');meta.style.display='block';meta.textContent='Gửi: '+(f.outgoing.join(', ')||'—')+' · Nhận: '+(f.incoming.join(', ')||'—');detail.append(meta);row.append(title,status,detail);body.append(row)}
+}search.addEventListener('input',render);render();
