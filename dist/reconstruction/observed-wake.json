@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-10-22",
+  "source": "Normal guest gameplay observation on the public website; not a new REA Evidence ID.",
+  "privacy": "Authentication, browser storage, full profiles, timestamps, unrelated FX and player traffic were removed. The guest name is replaced with {{ten}}.",
+  "context": {
+    "opening_choice": 0,
+    "wake_choice": 1,
+    "unobserved_wake_choices": [
+      0,
+      2
+    ]
+  },
+  "scene": {
+    "id": "canh_x01_tinh_day",
+    "vung": "zone_ta_gia_trai",
+    "buoc": [
+      {
+        "lenh": "toi",
+        "s": 0
+      },
+      {
+        "lenh": "the_ten",
+        "s": 2.6,
+        "chu": "Ngày thứ bảy",
+        "phu": "Tạ gia trại, đầu xuân"
+      },
+      {
+        "lenh": "sang",
+        "s": 1.4
+      },
+      {
+        "lenh": "may",
+        "ai": "nguoi_choi",
+        "zoom": 2,
+        "s": 0.8,
+        "ten_ai": "{{ten}}"
+      },
+      {
+        "lenh": "noi",
+        "kieu": "khung",
+        "chu": "Đầu nhói lên. Vết thương trên trán đã khô, mà vẫn nóng."
+      },
+      {
+        "lenh": "rung",
+        "s": 0.35,
+        "luc": 0.006
+      },
+      {
+        "lenh": "toi",
+        "s": 0.12
+      },
+      {
+        "lenh": "noi",
+        "kieu": "khung",
+        "chu": "Một bóng người. Một bàn tay đẩy mạnh. Rồi tiếng đá lăn xuống dốc…"
+      },
+      {
+        "lenh": "sang",
+        "s": 0.25
+      },
+      {
+        "lenh": "noi",
+        "kieu": "khung",
+        "chu": "Ai cũng bảo ngươi ngã trong rừng. Nhưng cảm giác ấy không giống ngã."
+      },
+      {
+        "lenh": "may",
+        "x": 30,
+        "y": 30,
+        "zoom": 1.05,
+        "s": 2.6
+      },
+      {
+        "lenh": "cho",
+        "s": 1.2
+      },
+      {
+        "lenh": "may_theo",
+        "s": 0.8
+      }
+    ]
+  },
+  "dialogues": [
+    {
+      "loai": "thoai",
+      "vai": "ke",
+      "text": "Trán ướt đẫm. Một chiếc khăn lạnh vừa đắp lên; dưới hầm, mùi men rượu bốc lên ngai ngái."
+    },
+    {
+      "loai": "thoai",
+      "vai": "npc",
+      "text": "Lại mơ thấy tòa lầu ấy sao? Huynh hét tên muội to lắm, muội ngồi ngay đây mà còn giật mình.",
+      "npc": "npc_tri_thu",
+      "ten": "Tri Thu",
+      "cd": "cd_tri_thu"
+    },
+    {
+      "loai": "thoai",
+      "vai": "npc",
+      "text": "Còn nói mớ cái gì mà \"không đi một mình\". Huynh định đi đâu mà phải rủ người?",
+      "npc": "npc_tri_thu",
+      "ten": "Tri Thu",
+      "cd": "cd_tri_thu"
+    },
+    {
+      "loai": "thoai",
+      "vai": "ke",
+      "text": "Bảy ngày rồi. Bảy ngày trong thân xác này, đêm nào cũng là cái lầu ấy.",
+      "tranh": "tranh_x01_nam"
+    },
+    {
+      "loai": "thoai",
+      "vai": "npc",
+      "text": "Muội trong mơ có đẹp không?",
+      "npc": "npc_tri_thu",
+      "cam": "vui",
+      "ten": "Tri Thu",
+      "cd": "cd_tri_thu"
+    },
+    {
+      "loai": "lua_chon",
+      "cac": [
+        {
+          "i": 0,
+          "text": "Không có gì."
+        },
+        {
+          "i": 1,
+          "text": "Muội vẫn ở đây."
+        },
+        {
+          "i": 2,
+          "text": "(Xoa đầu Tri Thu.)"
+        }
+      ]
+    },
+    {
+      "loai": "thoai",
+      "vai": "npc",
+      "text": "Muội còn đi đâu được nữa. Ngủ mê rồi nói bậy.",
+      "npc": "npc_tri_thu",
+      "ten": "Tri Thu",
+      "cd": "cd_tri_thu"
+    },
+    {
+      "loai": "thoai",
+      "vai": "ke",
+      "text": "Ở cửa, một người đàn bà tay còn dính bã men, chống nạnh nhìn vào. Bảy ngày nay ngươi đã tập gọi bà là mẹ."
+    },
+    {
+      "loai": "thoai",
+      "vai": "npc",
+      "text": "Hai đứa xuống hầm khiêng vò rượu lên. Mai khai khiếu rồi, đừng có lêu lổng.",
+      "npc": "npc_me",
+      "cam": "goi",
+      "ten": "Tạ Hương",
+      "cd": "cd_me"
+    },
+    {
+      "loai": "thoai",
+      "vai": "npc",
+      "text": "Mai huynh vào biển hoa sau từ đường. Đi được bao nhiêu bước thì biết có thành cổ sư hay không.",
+      "npc": "npc_tri_thu",
+      "ten": "Tri Thu",
+      "cd": "cd_tri_thu"
+    }
+  ],
+  "boundary": "The observed record ends after the first mother/Tri Thu instructions. Later quest dialogue and rewards in the clone are independent writing."
+}

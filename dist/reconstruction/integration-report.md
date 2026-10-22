@@ -1,32 +1,41 @@
-# Cập nhật khảo sát và tích hợp — 22/10/2026
+# Bản game V3 — 22/10/2026
 
-## Kết quả có căn cứ
+## Kết quả tích hợp
 
-- Đã tải và giải rối bản client đang phục vụ ở `index-ChkNmBLw.js`, SHA-256 `86878ad9ae94b44c7e99244fb8a51a08c03ebad3c0ec763cb43edb0229f7d183`.
-- REA recovery main: `ev_f575ceb894d2ec9eaf56cc01ef3b631348fbe1052903631c27dd9f03b65b2580`, complete. Cả bundle được bảo toàn đầu vào và mã dẫn xuất; không phải TSX gốc.
-- REA recovery ba chunk/worker: `ev_02b5a3106773bfd085cf1d0c1a3620991fa821c83dc1c05253d7d9477d3608f2`, complete.
-- REA guest browser scenario: `ev_902e540ce2ed5f25abe9e151e16f8db5e4ed2975d0628a4d35ab605aa08edaaa`. Vào được Giấc mơ, quan sát Ngũ chuyển 5200 HP/2400 CN, Tri Thu, nhiệm vụ `mq_mo_dau` và câu đầu. Network capture incomplete vì một số request còn đang chạy khi kết thúc.
-- Quan sát bổ sung bằng Playwright instrument client, không phải Evidence do REA phát hành: đã đi qua đoạn kết Giấc mơ tới Tạ gia trại. Các lời thoại trong intro module đối chiếu từ luồng đã quan sát; giữ nguyên biến tên người chơi của bản clone, không đóng gói khóa hoặc token của guest.
-- REA static analysis bốn script: `ev_ad4c36a8bdd518b4ac64aaab4fff9fcf6d11f1597c0ca022153c520821e6a004`. Partial: main bundle hết heap 3072 MiB; ba chunk parse thành công. Không được coi đây là semantic analysis hoàn chỉnh. AST inventory riêng ghi nhận 78 nhóm chức năng, 120 outgoing command literal và 179 incoming type; dynamic sends còn unknown.
-- Dữ liệu mới: 55 vùng, 377 cổ, 379 vật phẩm, 88 thú, 23 sát chiêu, 70 công thức. Visual index 2072 nhóm. Đồng bộ 40 file ảnh/atlas mới hoặc đổi thuộc 22 nhóm.
+- Khôi phục chuỗi `canh_x01_tinh_day` gồm 13 lệnh từ lượt chơi thực: nội dung, thời lượng, thẻ Ngày thứ bảy, camera, sáng/tối và rung màn hình. Dùng chính bộ diễn cảnh của client gốc, có bỏ qua và lưu trạng thái.
+- Ghi lại hội thoại Tri Thu sau khi tỉnh, ba lựa chọn và nhánh trả lời số 1; đối chiếu nhiệm vụ Xuống hầm rượu / Khiêng vò rượu cho mẹ. Bản mới có việc nhà ở cửa hầm trước khi tới lễ khai khiếu.
+- Nhân vật mới tỉnh dậy đúng dạng quan sát: Phàm nhân, 300 HP, 0 CN, chưa có cổ/nguyên thạch. Save V1/V2 giữ nguyên tài sản và cảnh giới, không bị chuyển thành nhân vật mới.
+- Bộ nhiệm vụ chơi đơn có 12 checkpoint, 8 việc phụ, mục tiêu, điều kiện theo sự kiện, ba nhánh hội thoại, cờ lựa chọn, quan hệ và sổ đã hoàn thành. Tiến trình thoại lưu được; phần thưởng không nhận lại bằng việc lặp gói tin/reload.
+- Nghề: 8 tên nghề gốc, học khi làm, đổi/thôi nghề, bậc nghề, nghề phụ, công thức và vị trí làm theo wiki. Các mã công thức nghề `nghe:*` được đặt riêng vì chưa biết mã server.
+- Hộ cụ: 4 ô, bộ 2/4 món, cấp/phẩm, nạp nguyên liệu, bảo hiểm thất bại, bùa, khảm/gỡ/ghép đá, thưởng Tứ Tượng và đồ đeo. Thay đồ cập nhật chỉ số thật, không cộng dồn sau mỗi lần refresh.
+- Chăm cổ theo ngày VN, luyện sân, ô dưỡng cổ/đóng băng lịch bữa, sản xuất theo thời gian; ăn tự động khi vắng, đói/kiệt sức/xác cổ. Cứu cổ Nhất–Tam chuyển bằng `co.hoi_sinh`, theo nhóm nguyên liệu công bố, tại Cửu bà hoặc tự làm khi đủ nghề; hàng đợi hồi sinh dùng chung xử lý nghỉ của inventory.
+- Luyện hóa có kim/giữ–thả và tiêu hao CN; hợp luyện chạy theo thời gian, dùng nguyên liệu thật, giữ cổ chính khi thất bại và cho nghỉ 24 giờ. Giá Kho tộc, giới hạn tuần và chu kỳ reset đọc từ dữ liệu công bố.
+- Tu luyện dùng đủ bốn giai và bảng tu vi Nhất–Ngũ chuyển trong wiki; quá tải khiếu giảm hiệu quả, có Tửu Trùng đúng chuyển, bế quan có giới hạn và mốc lưu. Đột phá cần nhiệm vụ, tài nguyên, CN và ba lần giữ/thả đúng nhịp; lỡ nhịp mất phí thử lại, không thu nguyên liệu hai lần. Xá Lợi đúng chuyển lên một giai, tiêu hao cổ, xóa tu vi đang tích và không thay thế đột phá.
+- Giao chiến: mở rộng ẩn thân/phát hiện, mù, phong khiếu, băng tích tầng, phản sát thương, kháng lưu phái, biến thân, lá hồi máu, bảo mệnh, cộng hưởng bản mệnh và cầu nối đồng hành. Bị đánh ngắt hấp thu; trói/choáng chặn di chuyển. Cổ bị động có thay đổi HP/CN/tốc độ thực tế.
+- 55 map giữ điểm/cửa/bãi đúng catalog; 10 map phụ bản có các đợt theo dữ liệu, boss có cảnh báo và pha. Khai khiếu, ba cửa, hầm rượu, Tháp và truyền thừa có tiến trình riêng, checkpoint/reload, thất bại và sổ nhận thưởng. Không nhân đôi loot khi reset hoặc boss hồi sinh.
+- Hòm đồ dùng giao diện `hom_do` gốc, gửi/rút/nâng ô có kiểm tra vị trí và tài nguyên. Hạ thú ngoài đồng Nhất–Tam chuyển nhận tu vi theo mức/cap công bố; cổ dùng trúng mục tiêu nhận thuần thục qua hook.
+- Menu Hành trình gọn hơn, bỏ các nút nhận đồ/hồi phục miễn phí; chỉ đi xe tới trạm đã ghé, phải đứng gần trạm. Save/export và xem lại giấc mơ vẫn có.
 
-## Đã tích hợp trong lần này
+## Bằng chứng và giới hạn chính xác
 
-1. Client và catalog mới nguyên bộ; transport/callback thay bằng runtime chơi đơn.
-2. Khởi tạo Giấc mơ trước khi vào trại: lời thoại đầu, Tri Thu, cửa sập, lướt, cánh, sân đá, Công/Thủ/Trị/Trinh, chiến đấu tự do, hấp thu, sát chiêu, né đòn, lựa chọn đối thoại, tự bạo, rừng cây và tỉnh dậy. Snapshot cũ giữ chỉ số/vật phẩm/tiền ở trại; quyền năng trong mơ không ghi đè lên tiến trình thường. Có chơi lại.
-3. Bỏ công thức damage cố định cho mọi cổ. Combat đọc data; 226/377 Gu có xử lý đầy đủ hoặc một phần trong catalog sweep, 151 báo rõ chưa hỗ trợ. Bao gồm mục tiêu/tầm/AoE/CN/cooldown, hồi máu, khiên, giảm sát thương, DoT, khống chế và cánh. Không suy diễn damage cho sát chiêu thường khi thiếu dữ liệu; sát chiêu mở đầu có kịch bản riêng.
-4. Lắp/tháo cổ, cho ăn/độ no, luyện hóa, dùng cao cầm máu, mua/bán, 70 công thức có định nghĩa (các công thức bản mệnh/nâng cao vẫn bị khóa khi chưa có luật).
-5. NPC F có lựa chọn dịch vụ, cửa hàng/chế tạo dùng UI gốc; tu luyện hiển thị mini UI gốc; trả về khi trọng thương dùng command `ve`; chat nhận đúng string/`tu`; ô tiêu hao `o_do`; đột phá có preview không trừ tài nguyên.
-6. Đi đến mọi vùng `zone_*` trong dữ liệu. Không tự nhét đàn lợn vào hub. Instance không có encounter script không được coi là đã clone hoàn chỉnh.
+Client nền là 4 bundle công khai đã khôi phục ở lần khảo sát đầu 22/10. REA: main `ev_f575ceb894d2ec9eaf56cc01ef3b631348fbe1052903631c27dd9f03b65b2580`; chunks `ev_02b5a3106773bfd085cf1d0c1a3620991fa821c83dc1c05253d7d9477d3608f2`. Phân tích semantic toàn bundle chính trước đó bị giới hạn heap; không coi là đã hiểu hết mọi hàm.
 
-## Phần còn thiếu — không thể lấy bằng trình duyệt
+Lần chơi V3 dùng nhân vật khách riêng trên game gốc. Quan sát hội thoại/gói kịch bản là ghi chép Playwright, không phải một Evidence ID mới của REA. Chỉ xuất bản bản trích chọn đã bỏ tên nhân vật thử, không xuất thông tin xác thực, storage trình duyệt hay log người chơi khác. `observed-wake.json` và `research-manifest.json` ghi phạm vi và SHA-256. Hai chân dung mới tải trực tiếp từ URL được client yêu cầu.
 
-Không có backend hoặc database gốc. Mã public không chứa đầy đủ định nghĩa/nhánh/thưởng nhiệm vụ, luật đấu trường và bang hội, thị trường nhiều người, tài khoản, RNG/drop, script toàn bộ instance và công thức sát chiêu máy chủ. Các giao diện tương ứng đã nằm trong bundle không có nghĩa là các hệ đó chạy được.
+Nguồn luật chính: wiki chính thức `/wiki/tn/nghe.html`, `ho_cu.html`, `tu_luyen.html`, `dot_pha.html`, `nuoi_co.html`, `luyen_hoa.html`, `hop_luyen.html`, `chien_dau.html`, `sat_chieu.html`; bảng vật phẩm/thú/phụ bản đã lưu. Trong khi khảo sát, game gốc thay client từ `index-iCsj8eQn.js` sang `index-XH21pn5C.js`. Catalog Gu vẫn 377, zones 55, recipes 70; dữ liệu buổi chiều thêm 2 item. Bản clone giữ bộ client/catalog đã kiểm thử, không thay bundle trong lúc tích hợp.
 
-Các trigger/timing chiến đấu và cutscene intro, nhánh lựa chọn chưa quan sát, giá mua/luyện hóa, quy trình chế tạo, cân bằng và chỉ số chơi đơn vẫn là reconstruction. Character thường hiện giữ cấu hình khởi hành của bản chơi đơn cũ (Nhất chuyển), không tự hạ cấp save về Phàm nhân như tài khoản mới của server thật. Cảnh tỉnh dậy tiếp theo/nhiệm vụ ngoài Giấc mơ chưa có script server. Không tuyên bố clone 1:1 hoặc đã dịch ngược source backend.
+**Phần tự dựng, chưa xác nhận trùng server:** toàn bộ nhiệm vụ sau đoạn Sáng xuân đã quan sát, phần thưởng/nhánh nhiệm vụ 12 checkpoint và 8 việc phụ, câu trả lời lựa chọn 0/2 lúc tỉnh, hội thoại dịch vụ, điều kiện quest chi tiết, AI/chỉ số thú thiếu trong catalog, xác suất rơi, timing một số boss; số ô nghề và hệ số nghề không công bố; các hệ số nâng phẩm/cường hóa/bảo hiểm/bộ/đá không có bảng server; giá hòm/xe và một số phí nghỉ/cứu cổ. Cứu cổ dùng policy cục bộ 20×chuyển² NT + 5×chuyển thảo dược, vật liệu nhóm Nhị/Tam, nghỉ một giờ mỗi chuyển và mất 10% thuần thục; đây không phải số gốc được giải mã. Quầy Tạ Ninh/Tú Nương hiện mở catalog vật liệu Thương hội thay vì catalog riêng chưa quan sát. Chưa có đủ script mọi phụ bản hay toàn bộ cây truyện nhiều năm của bản gốc.
 
-## Kiểm thử
+Combat sweep: **266/377** Gu được executor chấp nhận, trong đó 248 không báo thiếu effect trong phạm vi executor, 18 xử lý một phần; **111** trường hợp không khả dụng qua combat executor. Con số này không phải số Gu khôi phục đúng toàn game; Xá Lợi/chăm cổ/các tiện ích được xử lý bởi module khác. Nhiều cổ một lần, địa lợi, trận/tường, nô thú, kỹ năng niệm và sát chiêu vẫn chưa đầy đủ. Chưa có đầy đủ công thức sát thương server, tẩy luyện/nâng sao cổ, thú nhà hay toàn bộ đặc quyền của từng nghề.
 
-`npm test`: runtime/save migration, toàn bộ luồng intro, 15 test inventory/Gu/shop/recipe và 21 nhóm test combat + sweep 377 Gu. Browser QA bản local: đi hết intro về trại, lựa chọn NPC bằng F, panel túi/nhân vật/cổ, shop/craft, mini tu luyện, reload giữ save; không có page error, HTTP lỗi hoặc request sang server gốc trong lượt kiểm tra. Luồng cảm ứng được kiểm tra riêng ở màn hình ngang. Kết quả browser chỉ bao phủ những thao tác đã thử, không phải toàn bộ 78 hệ.
+Multiplayer, tài khoản/lưu cloud, bang/PvP, chợ chung và các hoạt động server vẫn nằm ngoài bản chơi đơn này. Xem từng hệ trong `feature-matrix.json`; báo cáo không gọi V3 là bản sao 100%.
 
-`feature-matrix.snapshot.json` / `feature-audit.snapshot.md` là snapshot kiểm kê trước các bản sửa cuối. Thay đổi sau snapshot: đã sửa chat string/tu, `ve`, exact dream predicate, `o_do`, preview `dot_pha`; intro đã được tích hợp và kiểm thử. Giữ snapshot không sửa lịch sử bằng các kết quả chưa có ở thời điểm chụp.
+## Kiểm tra
+
+`npm test` có 8 bộ kiểm tra: runtime/migration, intro, inventory, combat, progression, encounters, story và services. Các bộ dùng catalog thật, có kiểm tra thiếu tài nguyên, input sai, sự kiện lặp, thời gian/reload, atomicity và bảo toàn save.
+
+Browser desktop đã đi hết Giấc mơ, cảnh tỉnh, hội thoại/việc nhà, khai khiếu, chọn cổ, điều khiển mini luyện hóa thật, lắp cổ, mở nghề/công thức/nhân vật/quầy và reload giữ tiến trình. Không có page error, HTTP lỗi hay request ra server gốc trong lượt cuối. Các test dùng dịch chuyển/điều khiển host để rút ngắn đường đi; không tuyên bố đã tự đi mọi đường hoặc kiểm hết 78 hệ.
+
+Browser cảm ứng 844×390 đã kiểm tra đọc save cũ, giao diện hòm đồ, gửi/rút vật phẩm, mặc hộ cụ làm đổi HP thật, mở bảng nghề, bố cục không tràn ngang, lọc báo cáo và tải gói source. Lượt này không có page error hoặc HTTP lỗi.
+
+Các báo cáo chi tiết: `INVENTORY-V3.md`, `ENCOUNTERS-V3.md`, `PROGRESSION-V3.md`, `COMBAT-V3.md`. Runtime mới giữ project/audience cũ và không sửa cấu hình MCP dùng chung.

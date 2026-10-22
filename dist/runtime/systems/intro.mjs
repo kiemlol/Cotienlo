@@ -48,13 +48,13 @@ export function createIntro(room){
   else guide();
  }
  function collapse(){state.step='collapse';speak([KE('Trên sàn lóe lên một vòng ký hiệu.\nTrần đá trên cửa đông sập xuống, chắn kín lối ra.'),TRI('Vòng ký hiệu vừa sáng là trần sập. Lầu này không muốn ai ra.'),{loai:'thoai',vai:'nc',ten:p.ten,text:'Bên trái còn lối.'}],()=>setStep('dash'));}
- function confront(){state.step='confront';p.canh='';room.changed(p);boss.x=42;boss.y=16;room.changed(boss);
+ function confront(){state.step='confront';if(h.o[5]?.bat)room.combat?.attack({o:5});p.canh='';room.changed(p);boss.x=42;boss.y=16;room.changed(boss);
   speak([KE('Lối bên trái dẫn ra một sân đá rộng. Gió lùa qua, mang theo mùi tanh còn mới.'),KE('Giữa sân, bốn người nằm im, xếp thẳng một hàng như có ai cố ý bày ra.'),KE('Trên bậc đá phía bắc, một bóng sáu tay đứng quay lưng, da xám như xác.'),KE('Nó không nhìn hai người. Nó đứng như đang đợi một ai khác.'),TRI('Huynh cẩn thận… thứ đó có gì không ổn. Muội ở ngay sau lưng, che cho huynh.')],()=>{p.x=35;p.y=16;room.teleport(p.x,p.y);setStep('attack')});
  }
  function finish(){
   state.done=true;state.step='done';room.profile=structuredClone(baseProfile);room.profile.xong??=[];if(!room.profile.xong.includes('mq_mo_dau'))room.profile.xong.push('mq_mo_dau');
-  room.profile.flags??=[];if(!room.profile.flags.includes('intro_complete'))room.profile.flags.push('intro_complete');
-  Object.assign(p,{hp:baseProfile.hpMax||200,hpMax:baseProfile.hpMax||200,cn:baseProfile.cnMax||100,cnMax:baseProfile.cnMax||100,chuyen:baseProfile.chuyen||0,tocDo:1,canh:'',banMenh:''});
+  room.profile.flags??=[];for(const f of ['intro_complete','flag_mo_dau_xong','flag_mq_mo_dau_xong',...(state.choice===0?['flag_mo_dau_khong_di_mot_minh']:[])])if(!room.profile.flags.includes(f))room.profile.flags.push(f);
+  Object.assign(p,{hp:baseProfile.hp??baseProfile.hpMax??300,hpMax:baseProfile.hpMax??300,cn:baseProfile.cn??0,cnMax:baseProfile.cnMax??0,chuyen:baseProfile.chuyen??0,tocDo:1,canh:'',banMenh:''});
   room.progress.pendingSpawn={zone:'zone_ta_gia_trai',x:12,y:40};
   room.emit('thoai',null);room.emit('mini',null);room.emit('huong_dan',null);room.refresh();room.save();room.travel('zone_ta_gia_trai');
  }

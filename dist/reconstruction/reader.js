@@ -1,4 +1,4 @@
-const names={partial_local:'Chơi đơn · một phần',local_ui:'Giao diện cục bộ',ui_only:'Mới có giao diện',server_dependent:'Cần backend',absent:'Chưa dựng'};
+const names={partial_local:'Chơi đơn · một phần',local_ui:'Giao diện cục bộ',client_ui_only:'Mới có giao diện',ui_only:'Mới có giao diện',server_dependent:'Cần backend',absent:'Chưa dựng'};
 const matrix=await fetch('feature-matrix.json').then(r=>{if(!r.ok)throw Error('Không tải được kiểm kê');return r.json()});
 const search=document.querySelector('#search'),body=document.querySelector('#rows');
 function render(){const term=search.value.trim().toLowerCase(),rows=matrix.features.filter(f=>[f.id,f.name,f.clone_support_and_gaps,...f.outgoing,...f.incoming].join(' ').toLowerCase().includes(term));body.replaceChildren();document.querySelector('#count').textContent=`${rows.length} / ${matrix.features.length} hệ`;

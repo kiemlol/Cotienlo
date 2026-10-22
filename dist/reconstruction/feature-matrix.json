@@ -2,9 +2,9 @@
   "schema_version": 1,
   "title": "Cổ Tiên Lộ first-party frontend reconstruction feature inventory",
   "audit_date": "2026-10-22",
-  "clone_snapshot_utc": "2026-10-22T02:28:37.557Z",
+  "clone_snapshot_utc": "2026-10-22T16:56:16.681Z",
   "scope": {
-    "mode": "read-only source inventory; only this JSON and feature-audit.md are deliverables",
+    "mode": "Public-client reconstruction plus independently implemented local gameplay V3",
     "included": [
       "All inventoried first-party systems reachable from the captured main client, grouped by UX/contract ownership",
       "Baseline and October 22 recovery, public game/text data, prior reports, current clone core and newly integrated combat/Gu modules",
@@ -16,7 +16,7 @@
       "Original private backend/database and uncaptured runtime-only server scripts"
     ],
     "server_recovered": false,
-    "execution": "No original target or game was executed for this audit; source parsing and read-only comparisons only"
+    "execution": "Original public game observed with a separate guest for the bounded Sáng xuân flow; clone covered by eight automated suites and desktop/touch browser QA."
   },
   "provenance": {
     "baseline": {
@@ -703,7 +703,7 @@
       "name": "World maps, actor population and region transitions",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Recovered latest map rendering with local NPCs and limited beast population; extra travel menu now lists every zone_* entry. No original spawn tables, scripted region state or authoritative instance lifecycle.",
+      "clone_support_and_gaps": "Giữ 55 map, điểm/cửa và nhóm sinh theo catalog. Encounter sở hữu roster, điều kiện và reset; các map truyện chưa có script được để yên, không sinh quái giả.",
       "incoming": [
         "vao",
         "chuyen",
@@ -760,14 +760,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "movement",
       "name": "Movement, dash, collision and prediction",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Client prediction and local physics process in packets; runtime now scales physics speed from player.tocDo and flight. Remote reconciliation authority is absent; stun/root movement constraints still need end-to-end verification.",
+      "clone_support_and_gaps": "Di chuyển, va chạm, chạy nhanh 30 thể lực, lướt 4 m/0,2 giây và chặn khi trói/choáng/chết hoạt động cục bộ. Không có đồng bộ nhiều người.",
       "incoming": [
         "dich"
       ],
@@ -815,14 +815,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "navigation",
       "name": "Map discovery, fog, target routes and auto travel",
       "priority": "P1",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "Minimap/world-map UI remains; no kham_pha payload, original quest destinations, discovery persistence or server route offers.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Ghi nhận trạm đã ghé; xe chỉ đi giữa trạm thế giới đã mở, phải đứng gần trạm và dùng phí cục bộ 5 nguyên thạch. Tự tìm đường server chưa có.",
       "incoming": [
         "kham_pha",
         "manh_len_duong",
@@ -874,14 +874,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "combat",
       "name": "Combat targeting, Gu casting, AoE and combat FX",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Concurrent integration now routes dung/sat_chieu into createCombat. It implements catalog-based direct damage/heal, supported AoE, cooldowns/CN, held skills, selected status effects and flight. Killer moves, passives, advanced conditional effects/synergies, projectile/terrain collision and original scaling remain absent.",
+      "clone_support_and_gaps": "266/377 Cổ được executor nhận: 248 không báo thiếu effect trong phạm vi executor và 18 xử lý một phần; 111 không khả dụng qua executor. Có AoE, hồi máu, khiên, DoT, khống chế, phản sát thương, ẩn/phát hiện, biến thân và bảo mệnh; công thức server, nhiều sát chiêu/địa lợi/nô thú vẫn thiếu.",
       "incoming": [
         "fx",
         "boss"
@@ -937,14 +937,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "status",
       "name": "Health, stamina, buffs, wounds, death and revival",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Đã nối sự kiện trọng thương/ve để về trạm trong chơi đơn. Hiệu ứng chỉ xử lý tập con combat công bố; luật PvP/server chưa có.",
+      "clone_support_and_gaps": "HP/CN/thể lực, khiên, độc, thiêu đốt, mù, phong khiếu, băng, trói/choáng, trọng thương và hồi sinh Cổ Nhất–Tam chuyển có luật chơi đơn. Chi phí cứu Cổ và một số tương tác hiệu ứng là policy cục bộ.",
       "incoming": [
         "hieu_ung_toi",
         "nghe_dat",
@@ -998,14 +998,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "cultivation",
       "name": "Meditation, absorption and cultivation minigames",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Concurrent runtime now handles hap, mini cancellation/hold/auto and emits tu_luyen mini state. Uses local 1 stone/1.5s → 4 training and +20 CN; ngoi still grants training every 250ms. Original timing/grading and conversion formulas remain incomplete.",
+      "clone_support_and_gaps": "Tu luyện dùng bảng tu vi Nhất–Ngũ chuyển công bố, quá tải khiếu, Tửu Trùng, ngắt khi di chuyển/bị đánh và bế quan có giới hạn. Ngoài phòng tu luyện dùng hệ số cục bộ 75%.",
       "incoming": [
         "mini",
         "mini_dap",
@@ -1061,14 +1061,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "breakthrough",
       "name": "Realm breakthroughs and rebirth",
       "priority": "P1",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Đã thêm preview dot_pha không trừ tài nguyên. Đột phá chơi đơn dùng luật riêng; trial và điều kiện nhiệm vụ gốc chưa có.",
+      "clone_support_and_gaps": "Có điều kiện nhiệm vụ, tài nguyên/CN, ba nhịp giữ–thả, phí thử lại và Xá Lợi đúng chuyển. Cửa sổ nhịp và phí chưa được xác nhận từ backend gốc.",
       "incoming": [
         "dot_pha",
         "trung_tu",
@@ -1123,14 +1123,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "offline",
       "name": "Seclusion, leave summary and idle hunting",
       "priority": "P1",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "Profile contains unopened beQuan/treo defaults; treo and ren_than_tu are unhandled. No elapsed-time settlement or offline reward accounting.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Bế quan tính từ mốc save, bị chặn trước khi nhiệm vụ mở khóa và giới hạn giờ. Không mô phỏng săn treo máy hay tổng kết server.",
       "incoming": [
         "treo",
         "ren_than",
@@ -1184,14 +1184,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "profile",
       "name": "Character sheet, stat sources and potential points",
       "priority": "P1",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "Static starter stats can render; tiem_nang allocation/reset and derived source breakdowns are not implemented.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Nhân vật mới bắt đầu Phàm nhân 300 HP/0 CN; chỉ số cảnh giới, Cổ bị động, hộ cụ, bộ và đồ đeo cập nhật thật, idempotent. Save cũ được giữ nguyên.",
       "incoming": [
         "ho_so"
       ],
@@ -1241,7 +1241,7 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "schools",
@@ -1308,7 +1308,7 @@
       "name": "Gu ownership, refining, slots, feeding and care",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "New inventory module handles co {lap,go,luyen,an}, checks slots/rank/birth Gu, uses catalog food and hunger ticks. Refining is immediate at an invented 20 NT + 10 CN per rank. Care, death/resurrection, nursery, release and disenchantment remain unhandled.",
+      "clone_support_and_gaps": "Có lắp/tháo, cho ăn, lịch đói offline, luyện hóa kim giữ–thả, ô dưỡng Cổ, hợp luyện và tử vong/hồi sinh. Hệ số không công bố và các Cổ tiện ích đặc thù chưa đầy đủ.",
       "incoming": [
         "co_an_xong"
       ],
@@ -1363,14 +1363,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "gu_mastery",
       "name": "Gu familiarity, training, star upgrades and rerolls",
       "priority": "P1",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "Default familiarity/star fields render but do not advance; luyen_san, dan_thuan_thuc and tay_luyen have no implementation.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Thuần thục tăng khi Cổ đánh trúng mục tiêu thật và khi luyện sân; có mốc bậc công bố. Nâng sao/tẩy thuộc tính chưa được dựng.",
       "incoming": [
         "dan_thuan_thuc",
         "tay_luyen"
@@ -1424,14 +1424,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "birth_gu",
       "name": "Birth Gu swapping and fragment exchange",
       "priority": "P1",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "Starter birth flag exists; swap, fragment conversion and recipe-fragment redemption are unhandled.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Giữ quy tắc bảo vệ Cổ bản mệnh và cộng hưởng trong chiến đấu. Đổi bản mệnh/mảnh trao đổi đầy đủ vẫn chưa có.",
       "incoming": [
         "doi_ban_menh",
         "doi_manh"
@@ -1483,7 +1483,7 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "killer_moves",
@@ -1546,7 +1546,7 @@
       "name": "Gu synthesis, recipe learning and library",
       "priority": "P1",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "New che handler consumes published recipe inputs/CN and immediately succeeds through che_tao. Separate original hop_luyen library/minigame/timers/probabilities, birth-Gu recipes and recipe learning remain absent.",
+      "clone_support_and_gaps": "70 công thức công bố được đọc từ catalog; hợp luyện tiêu nguyên liệu thật, chạy theo thời gian và giữ Cổ chính khi thất bại. Xác suất chưa công bố là policy cục bộ.",
       "incoming": [
         "hop_luyen"
       ],
@@ -1593,14 +1593,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "inventory",
       "name": "Inventory, consumables, disposal and capacity",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "New module processes purchases/sales and one consumable: cao_cam_mau heals 40/5s. Inventory capacity is checked on purchases. Other consumables, vut, mo_rong_tui and o_do remain absent.",
+      "clone_support_and_gaps": "Túi, tiêu hao, mua/bán, giới hạn sức chứa và chuyển hòm hoạt động bằng tài nguyên thật. Một số loại vật phẩm đặc biệt vẫn chỉ hiển thị.",
       "incoming": [
         "ho_so"
       ],
@@ -1656,14 +1656,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "quick_items",
       "name": "Item quick slots (October 22)",
       "priority": "P1",
-      "clone_status": "partial_local",
-      "clone_support_and_gaps": "Đã thêm state và handler o_do, kiểm tra vật phẩm tiêu hao thực sự sở hữu; chỉ những hiệu ứng tiêu hao được runtime hỗ trợ mới chạy.",
+      "clone_status": "absent",
+      "clone_support_and_gaps": "Latest client quick-slot UI is available, but profile has no oDo and local dispatch has no o_do handler; Z/G assignment and persistence remain absent.",
       "incoming": [
         "ho_so"
       ],
@@ -1710,8 +1710,8 @@
       "id": "equipment",
       "name": "Armor, sets, enhancement, sockets and rare gear",
       "priority": "P1",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "Empty hoCu profile shell; equip/upgrade/socket/reforge are unhandled. Latest adds rare-set bonuses, decomposition/sale and level transfer.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Bốn ô hộ cụ, bộ 2/4, cấp/phẩm, nạp, bảo hiểm, bùa, khảm/gỡ/ghép đá và đồ đeo đã có. Hệ số nâng cấp/bộ/đá là luật tự dựng khi wiki không nêu số.",
       "incoming": [
         "ho_so",
         "tay_luyen"
@@ -1769,14 +1769,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "appearance",
       "name": "Cosmetics, titles, portraits and privacy",
       "priority": "P2",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "Gender/color starter avatar renders; titles, outfits, accessories, frames, birth display and profile privacy updates are unhandled.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Chân dung, tranh nhân vật, giới tính/áo và đồ đeo đã nối với client. Kho mỹ phẩm, danh hiệu và riêng tư server chưa có.",
       "incoming": [
         "ho_so"
       ],
@@ -1833,14 +1833,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "npc_shop",
       "name": "NPC shop, clan stock, medicines and reputation shops",
       "priority": "P1",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Generic local shop now emits cua_hang and supports mua/ban using reconstructed stock/prices; NPC dialogue offers custom shop/craft/train/heal choices. Original NPC-specific stock/rotation, reputation, weekly limits and services are absent.",
+      "clone_support_and_gaps": "Kho tộc, thuốc và quầy NPC dùng catalog/giới hạn công bố; mua bán nguyên tử. Tạ Ninh/Tú Nương tạm dùng catalog vật liệu Thương hội vì chưa quan sát được quầy riêng.",
       "incoming": [
         "cua_hang",
         "danh_vong"
@@ -1897,7 +1897,7 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "market",
@@ -2137,8 +2137,8 @@
       "id": "storage",
       "name": "Personal chest and guild storage",
       "priority": "P1",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "hom_do is unhandled and guild storage unavailable; inventory is the only persistence container.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Hòm đồ dùng đúng giao diện hom_do của client, kiểm tra đứng gần thủ kho, gửi/rút/nâng ô nguyên tử và lưu được. Giá 50×mốc, 20 ô đầu và trần 60 là policy cục bộ; kho bang chưa có.",
       "incoming": [
         "hom_do"
       ],
@@ -2186,14 +2186,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "professions",
       "name": "Professions, crafting and production",
       "priority": "P1",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Local generic che_tao recipe crafting is now available; profession learning/switching, XP and profession-specific production remain unimplemented.",
+      "clone_support_and_gaps": "Có 8 nghề, học khi làm, hai nghề chính, điểm/bậc, đổi/thôi nghề, nghề phụ và công thức/vị trí theo wiki. Mốc 25/50/75 và mất nửa điểm khi thôi là policy cục bộ.",
       "incoming": [
         "che_tao"
       ],
@@ -2243,14 +2243,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "gathering",
       "name": "Gather nodes, hold/release and resource depletion",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "F on a nearby nguon_hai now calls instant local herb gathering; extra button still grants herbs anywhere on 3-second cooldown. Original hai duration/release, depletion and node-specific drops remain absent.",
+      "clone_support_and_gaps": "Nút nhận nguyên liệu miễn phí đã bỏ; các công thức tiêu vật liệu thật và một số nhiệm vụ giao nộp có kiểm đếm. Node tài nguyên, cạn kiệt và minigame thu thập từng nghề chưa đầy đủ.",
       "incoming": [
         "hai"
       ],
@@ -2286,7 +2286,7 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "garden",
@@ -2462,8 +2462,8 @@
       "id": "quests",
       "name": "Main/side quests, memory book and quest turn-in",
       "priority": "P0",
-      "clone_status": "absent",
-      "clone_support_and_gaps": "nv is always {ds:[],xong:0,kyUc:[]}; nv_xong is unhandled. Extra 3-kill/3-herb chapter reward is invented and unrelated to original quest state.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Có 12 checkpoint chính, 8 việc phụ, mục tiêu/cờ/quan hệ/phần thưởng một lần và sổ nhiệm vụ. Chỉ Sáng xuân, việc xuống hầm/khiêng rượu được quan sát trực tiếp; phần truyện sau đó là tuyến chơi đơn tự dựng.",
       "incoming": [
         "nv",
         "nv_xong",
@@ -2521,14 +2521,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "dialogue",
       "name": "NPC services, dialogue choices, stories and cutscenes",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "NPC F now emits a custom lua_chon panel with shop/craft/train/heal/close options and local transitions. Original service/story choice trees, non-intro cutscenes and story acknowledgements are still absent. Intro is excluded.",
+      "clone_support_and_gaps": "Cảnh Sáng xuân dùng 13 lệnh quan sát và renderer gốc; hội thoại Tri Thu/mẹ cùng 3 lựa chọn được nối. Chỉ nhánh tỉnh dậy số 1 đã quan sát; nhánh 0/2 và các cây thoại về sau là tự viết.",
       "incoming": [
         "thoai",
         "lore_ds",
@@ -2588,7 +2588,7 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "help",
@@ -2785,8 +2785,8 @@
       "id": "encounters",
       "name": "Exploration, random encounters and dream replays",
       "priority": "P1",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "No ky_ngo/kham_pha/replay messages or event sequencing. Dream-context content exists in the original client, with new overrides in October 22.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Roster/điều kiện/sự kiện cục bộ thay cho quái mẫu; có khai khiếu, ba cửa, hầm rượu, boss theo giờ, đột biến và script pha/cảnh báo. Chưa có mọi script private của 55 map.",
       "incoming": [
         "ky_ngo",
         "ky_ngo_so",
@@ -2840,14 +2840,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "dream_rules",
       "name": "Dream-specific Gu definitions (October 22)",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Đã dùng exact predicate inst_mo_dau / inst_mo_lai_* / inst_mong_canh_loan_chien; Giấc mơ có runtime và kịch bản quan sát. Không áp override nhầm vào Mỏ Cũ. Timing và các nhánh chưa quan sát vẫn là reconstruction.",
+      "clone_support_and_gaps": "Giấc mơ mở đầu đầy đủ tuyến chính đã quan sát, lựa chọn, tự bạo, cảnh rừng và chuyển sang Sáng xuân. Timing/nhánh chưa quan sát vẫn là reconstruction.",
       "incoming": [
         "ho_so",
         "mini"
@@ -2896,14 +2896,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "dungeons",
       "name": "Party instances, difficulty, invitations and entry gates",
       "priority": "P2",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "Door instance travel creates an ordinary local room; no party checks, difficulty, tickets, shared room or dungeon progress.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "10 map phụ bản có wave cục bộ; 7 ID/drop được đối chiếu nguồn công bố, boss có pha/cảnh báo và chống nhận loot lặp. Không có party/backend và chưa khẳng định đúng toàn bộ script gốc.",
       "incoming": [
         "inst_to_cua",
         "inst_to_moi",
@@ -2960,14 +2960,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "trial_tower",
       "name": "Trial tower, floors and rewards",
       "priority": "P2",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "No thap/thap_tang messages or tower progression.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Có tầng, đồng hồ, boss mỗi tầng thứ năm, thất bại/reset và sổ nhận thưởng ngày trong save. AI/hệ số/phần thưởng chưa công bố là luật cục bộ.",
       "incoming": [
         "thap",
         "thap_tang"
@@ -3015,14 +3015,14 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "heritage_tower",
       "name": "Heritage, secret floors, books and exchanges",
       "priority": "P2",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "lau/truyen_thua/doc_sach/quan_nhu are unhandled.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Có ba tầng, chủ đề tuần, checkpoint và chống nhận lại thưởng. Chưa có toàn bộ sách/trao đổi và script server.",
       "incoming": [
         "lau",
         "truyen_thua",
@@ -3077,7 +3077,7 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "arena",
@@ -3356,8 +3356,8 @@
       "id": "world_boss",
       "name": "World bosses, rare leaders and contribution settlement",
       "priority": "P2",
-      "clone_status": "client_ui_only",
-      "clone_support_and_gaps": "Local beasts use 80 HP defaults and generic chase/damage. Boss schedules render from data but no global spawn/contribution/rare-leader contract.",
+      "clone_status": "partial_local",
+      "clone_support_and_gaps": "Có cửa sổ giờ công bố, cảnh báo, pha và loot cục bộ. Không có đóng góp/xếp hạng/chia thưởng nhiều người.",
       "incoming": [
         "boss",
         "dau_dan",
@@ -3412,7 +3412,7 @@
           }
         ]
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "world_events",
@@ -4072,7 +4072,7 @@
       "name": "Chat channels, whisper, megaphone and emotes",
       "priority": "P2",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Đã sửa contract string/tu cho chat cục bộ. Chat nhiều người và các kênh có quyền vẫn chưa có backend.",
+      "clone_support_and_gaps": "chat only echoes locally with kenh=vung and ten; original UI expects tu/noi and server channel metadata. chat_kenh/chat_to/chat_bang/loa/bieu_cam unhandled.",
       "incoming": [
         "chat",
         "loa",
@@ -4864,7 +4864,7 @@
       "name": "Local save, export and persistence limits",
       "priority": "P0",
       "clone_status": "partial_local",
-      "clone_support_and_gaps": "Concurrent runtime writes version:2 under existing ctl.playable.v1.* key and saves profile/progress/position every 4s, leave/pagehide, plus export. Gu inventory adds its own versioned profile state. No general schema migration or cloud/account sync is established.",
+      "clone_support_and_gaps": "Save schema v3 vẫn dùng khóa ctl.playable.v1.*, có migration bảo toàn save V1/V2, vị trí, quest, dịch vụ và export. Đây là save trình duyệt, không phải cloud account.",
       "incoming": [],
       "outgoing": [],
       "ui_text_groups": [
@@ -4881,7 +4881,7 @@
         "baseline": [],
         "latest": []
       },
-      "evidence_basis": "Static client/clone source and public catalog; no behavior test in this audit"
+      "evidence_basis": "Static recovered client/public catalog plus focused unit and browser QA; original backend remains unavailable."
     },
     {
       "id": "catalog",
@@ -29119,19 +29119,53 @@
     }
   },
   "post_audit_integration": {
+    "version": "3.0.0",
     "date": "2026-10-22",
-    "intro": "Full observed main opening sequence reconstructed with independent trigger/timing and preserved town saves.",
-    "public_client_recovery": "all four public bundles recovered; not authored source or backend",
+    "observed_scope": "Opening dream, 13-step Sáng xuân cutscene, wake dialogue choice 1, and cellar/carry-wine quest transition.",
+    "independent_scope": "Later quests, side jobs, professions, equipment policies, advanced progression, combat extensions and local encounter scripts.",
+    "public_client_recovery": {
+      "main": "ev_f575ceb894d2ec9eaf56cc01ef3b631348fbe1052903631c27dd9f03b65b2580",
+      "chunks": "ev_02b5a3106773bfd085cf1d0c1a3620991fa821c83dc1c05253d7d9477d3608f2"
+    },
     "semantic_analysis": {
       "evidence_id": "ev_ad4c36a8bdd518b4ac64aaab4fff9fcf6d11f1597c0ca022153c520821e6a004",
-      "coverage": "partial: main bundle heap-exhausted at 3072 MiB, three chunks parsed; no repeat of unchanged analysis"
+      "coverage": "Partial: main bundle exhausted a 3072 MiB heap; three chunks parsed. Readable recovery is not proof of backend or complete semantics."
+    },
+    "testing": {
+      "node_suites": 8,
+      "desktop": "Full observed opening once; focused V3 wake-to-first-Gu/refining/equipment/profession/reload path passed.",
+      "touch": "844×390 storage, equipment, professions, responsive report and download passed with no page/HTTP errors."
     },
     "updated_feature_rows": [
-      "chat",
+      "world",
+      "movement",
+      "navigation",
+      "combat",
       "status",
+      "cultivation",
+      "breakthrough",
+      "offline",
+      "profile",
+      "gu",
+      "gu_mastery",
+      "birth_gu",
+      "recipes",
+      "inventory",
+      "equipment",
+      "appearance",
+      "npc_shop",
+      "storage",
+      "professions",
+      "gathering",
+      "quests",
+      "dialogue",
+      "encounters",
       "dream_rules",
-      "quick_items",
-      "breakthrough"
+      "dungeons",
+      "trial_tower",
+      "heritage_tower",
+      "world_boss",
+      "save"
     ]
   }
 }

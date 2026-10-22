@@ -1,0 +1,191 @@
+{
+  "schema_version": 1,
+  "generated_on": "2026-10-22",
+  "notes": [
+    "Hashes identify captured public inputs used for bounded research.",
+    "Browser-observation files containing authentication or full profiles are intentionally excluded.",
+    "The original game changed its public main bundle during the research window; the clone retains the frozen, tested base."
+  ],
+  "files": [
+    {
+      "file": "work/cotienlo-expand/live-main.js",
+      "bytes": 3445491,
+      "sha256": "86878ad9ae94b44c7e99244fb8a51a08c03ebad3c0ec763cb43edb0229f7d183"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/live-main.js",
+      "bytes": 3253685,
+      "sha256": "f3459255e03ce098b3416dca711569334c78760ec3336176397899c6e939e7e4"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/live-main-evening.js",
+      "bytes": 1885384,
+      "sha256": "15eb0f3680450e0de67cab8cf01b639284579510e7f12378483155a5a53cc7a5"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/game-evening.json",
+      "bytes": 1421903,
+      "sha256": "551ef5a115c9ba8aef7eb74e2a4c4a9a7d9ce2329793b016233f943da85a1b98"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/ban_do.html",
+      "bytes": 11284,
+      "sha256": "c10de0bc35b5cb73522b311c8e28cf5b02e99c6cd247d76b48a29e4fcb8147fb"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/chien_dau.html",
+      "bytes": 16120,
+      "sha256": "724fa32595757f6a9eb80cf2933340d0ea5e3d8a701ac195ca9466c9c39d070c"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/dot_pha.html",
+      "bytes": 22995,
+      "sha256": "9fdbf6b3e9e530264a1fd9e9abe723b306d6fcda4e7a23fd69bd181c239d6c3f"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-ban-do.html",
+      "bytes": 13331,
+      "sha256": "e0d7630e388705bb61a1d789d1fdaead8308a8d533fdc92f81cc766fabbf26e1"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-pb-dg_dam_hac_thuy.html",
+      "bytes": 15813,
+      "sha256": "c2985bd7b969c33c2bf7be5d527ee7d599a17ead43fac84204a47268df3c136a"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-pb-dg_ham_mo.html",
+      "bytes": 16244,
+      "sha256": "517d15ba309a2f8df1a11827cca8f0687f32976174c826176b17bf2ee84c9846"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-pb-dg_hang_dia_thu.html",
+      "bytes": 14076,
+      "sha256": "7856af8d906bf910ecbb8ab22871dddf686478ee06093758874798ac56c769c3"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-pb-dg_hang_heo.html",
+      "bytes": 15768,
+      "sha256": "f3f51c4a2c968cf723060ce17a682e32a064d7e17474fa8d28baf8a7b6e1401a"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-pb-dg_huyet_soi_tuyet.html",
+      "bytes": 15901,
+      "sha256": "3fa973dd224c587572033d85c3acc3690e101f7f6cfcf3d815d43ae6b53e0ccb"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-pb-dg_o_soi.html",
+      "bytes": 15044,
+      "sha256": "891bc90ae20284c350a1d08e54be1bf7d1bf55469dfc28f188216250ecb87bfe"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-pb-dg_sao_lang_phu.html",
+      "bytes": 16771,
+      "sha256": "554424fa6afb396559e99b679eafa523c687ce4205b2817f3d40eb5dd31ab09c"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-thu.html",
+      "bytes": 28124,
+      "sha256": "4ca17d1a46023c59f2e5aa7a62c796ae2c67a7470c69345d45f5a02a4748b8ea"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-tn-bien_di.html",
+      "bytes": 11728,
+      "sha256": "d34c30a2247f26767b5aef1a0d9aa9a40cc1445b6261585722a5419f269f80f0"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-tn-boss_da_ngoai.html",
+      "bytes": 12822,
+      "sha256": "8a37ecda767f81af7b34f7c2ffb3998449d6e9541c73b5e6da759cd48fa5c80c"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-tn-thap.html",
+      "bytes": 15058,
+      "sha256": "d8c897011e6513d06d5245e4e39504bb234a1445359a9815e282ab8e76624615"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-tn-thu_huyet.html",
+      "bytes": 14321,
+      "sha256": "b290c62153ac4fba089bd55c7e66b1363cfdc280ec4a98665f77210cfd9716fa"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-tn-thu_vuong.html",
+      "bytes": 14971,
+      "sha256": "085af4d53dafb4d03d82bab1390017bfeb000d297ac084422ac9ba53fba5ab4d"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/encounters-tn-truyen_thua.html",
+      "bytes": 11604,
+      "sha256": "1c62cbf8f88fc0e62de4e8809c9b538b72dfb523c19d7e6060da34a50e1c10a3"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/ho_cu.html",
+      "bytes": 13398,
+      "sha256": "c2521d3e9815fea776276a2c95e9bc4ab64a3f20c0a8a081d1a4593fee58fe28"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/hop_luyen.html",
+      "bytes": 12452,
+      "sha256": "37ec5c859d4827572db76cd02e05977e05ba20fdce7509613076d94862c7a7e9"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/luyen_hoa.html",
+      "bytes": 13238,
+      "sha256": "6d3153c096f88442f4a7e9c485d80e5b20b1ad442d5bffec7b21820d6269b43e"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/nghe.html",
+      "bytes": 97918,
+      "sha256": "b86980594bd797fb4523427f2c651244cd366017f58bfc097884a475f5a83a32"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/nhiem_vu.html",
+      "bytes": 12232,
+      "sha256": "47d72c37d0aadcb279f288017b3138b376d6c0496e25b6665926bffca4b6f64a"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/nuoi_co.html",
+      "bytes": 13338,
+      "sha256": "99ef76eed538796dafb9beb2661af4ebb2376c17f46b6da4a45995bcac171eb9"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/sat_chieu.html",
+      "bytes": 11577,
+      "sha256": "b9b149c8230fdd1934f92ae4d317f3bd3645d292e09877ce206120102a2faefe"
+    },
+    {
+      "file": "work/cotienlo-expand/v3/wiki/tu_luyen.html",
+      "bytes": 14337,
+      "sha256": "a66745489a368d7f6bc306998a334c35dc8e6918630b976c1e8aef1af189b1c5"
+    },
+    {
+      "file": "sites/cotienlo-game/dist/assets/chan_dung_px/cd_tri_thu.png",
+      "bytes": 102480,
+      "sha256": "c7f54d5ab4092e088db01bb94fa8015d16d654c60c1e1c61543c81a178766a1a"
+    },
+    {
+      "file": "sites/cotienlo-game/dist/assets/chan_dung_px/cd_me.png",
+      "bytes": 89313,
+      "sha256": "484010927696a36eb45f9e7f97ec097bf7c576539d960fe36043fba5a1a1b5cf"
+    },
+    {
+      "file": "work/cotienlo-expand/recovered-current/inputs/bundle.js",
+      "bytes": 3445491,
+      "sha256": "86878ad9ae94b44c7e99244fb8a51a08c03ebad3c0ec763cb43edb0229f7d183"
+    },
+    {
+      "file": "work/cotienlo-expand/recovered-chunks/inputs/XemThuScene-DFcRKzcn.js",
+      "bytes": 1462,
+      "sha256": "351b0b7406df7713b472a1fa7d19b9b1c6068c867e7520b4a2d74339d32358be"
+    },
+    {
+      "file": "work/cotienlo-expand/recovered-chunks/inputs/cayTho-DJTH3iJH.js",
+      "bytes": 11119,
+      "sha256": "1096294c27c66270abf94bda0993d9d4aae06175a8b413089e19a32f4dbd2422"
+    },
+    {
+      "file": "work/cotienlo-expand/recovered-chunks/inputs/tho-BJRszubk.js",
+      "bytes": 175715,
+      "sha256": "8b9a5fac8fa124f667de328eb22995d0ff1c172f51ba057feafe41364f4022d1"
+    }
+  ]
+}
