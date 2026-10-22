@@ -1,0 +1,18 @@
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createServices} from '../src/systems/services.mjs';
+const data=JSON.parse(await readFile('dist/data/game.json'));
+const r={data,profile:{chuyen:1,nguyenThach:200,tui:{item_thao_duoc:10},tuiToiDa:1},player:{x:2,y:2},zoneId:'zone_khe_coc',state:{actors:new Map([['k',{def:'npc_giu_kho',x:2,y:3}]])},messages:[],gains:[],emit(type,p){this.messages.push({type,p})},notify(){},refresh(){},save(){},progression:{addTuVi(n){r.gains.push(n)}}};
+let api=createServices(r);assert.equal(api.handle('unrelated',{}),false);api.openStorage();assert.equal(r.messages.at(-1).type,'hom_do');
+api.handle('hom_do',{hd:'gui',id:'item_thao_duoc',so:5});assert.equal(r.profile.tui.item_thao_duoc,5);assert.equal(r.profile.servicesV3.storage.items.item_thao_duoc,5);
+const snapshot=JSON.stringify(r.profile);for(const p of [{hd:'gui',id:'item_thao_duoc',so:-1},{hd:'rut',id:'item_thao_duoc',so:99},{hd:'gui',id:'__proto__',so:1},{hd:'rut',id:'item_nguyen_thach',so:1}])api.handle('hom_do',p);assert.equal(JSON.stringify(r.profile),snapshot);
+r.player.x=100;api.handle('hom_do',{hd:'gui',id:'item_thao_duoc',so:1});assert.equal(JSON.stringify(r.profile),snapshot);r.player.x=2;
+api.handle('hom_do',{hd:'nang'});assert.equal(r.profile.nguyenThach,150);assert.equal(r.profile.servicesV3.storage.capacity,25);
+r.profile=JSON.parse(JSON.stringify(r.profile));api=createServices(r);api.handle('hom_do',{hd:'rut',id:'item_thao_duoc',so:5});assert.equal(r.profile.tui.item_thao_duoc,10);
+const a={hp:0,chuyen:1,bac:'thuong'};api.onKill(a);api.onKill(a);assert.deepEqual(r.gains,[1]);for(let i=0;i<25;i++)api.onKill({hp:0,chuyen:1,bac:'thuong'});assert.equal(r.gains.at(-1),.25);r.zoneId='inst_hang_heo';api.onKill({hp:0,chuyen:1,bac:'thuong'});assert.equal(r.gains.length,26);
+r.profile.tv={chuyen:1,giai:0,diem:170};r.profile.co=[{uid:'relic',loai:'gu_thanh_dong_xa_loi',luyenHoa:true,no:100}];r.profile.o=[{uid:'relic',loai:'gu_thanh_dong_xa_loi'}];Object.assign(r.player,{hp:100,cn:100,cnMax:100});
+assert(api.handle('dung',{o:0}));assert.equal(r.profile.tv.giai,1);assert.equal(r.profile.tv.diem,0);assert.equal(r.profile.co.length,0);assert.equal(api.handle('dung',{o:0}),false);
+r.profile.co=[{uid:'corpse',loai:'gu_nguyet_quang',luyenHoa:true,no:0,thuanThuc:5,nghi:{ly:'xac',den:Date.now()+86400000}}];r.profile.tui.item_thao_duoc=10;r.profile.nghe={ds:[]};api.refresh();assert(r.profile.co[0].cuu.can.length);
+const oldMoney=r.profile.nguyenThach;api.handle('co',{hoi_sinh:'corpse'});assert.equal(r.profile.nguyenThach,oldMoney);
+r.state.actors.set('healer',{def:'npc_cuu_ba',x:r.player.x,y:r.player.y+1});api.handle('co',{hoi_sinh:'corpse'});assert.equal(r.profile.co[0].nghi.ly,'hoi_sinh');assert.equal(r.profile.nguyenThach,oldMoney-20);assert.equal(r.profile.tui.item_thao_duoc,5);api.handle('co',{hoi_sinh:'corpse'});assert.equal(r.profile.nguyenThach,oldMoney-20);
+console.log('Services PASS: original storage panel shape, atomic proximity/quantity/capacity checks, JSON reload, published field XP caps and duplicate protection.');

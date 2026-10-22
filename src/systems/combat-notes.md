@@ -1,139 +1,220 @@
-Combat integration (22 Oct live catalog)
-=======================================
+# Combat V3 integration contract — 22 October 2026
 
-`createCombat(room)` exports `{attack(payload, type = 'dung'), tick(now),
-getDamageReduction(), receiveDamage(amount, source, now = Date.now())}`. Create
-one instance after state/player/profile initialization, route `dung` and
-`sat_chieu` to `attack`, and call `tick(Date.now())` from the room timer. All
-timestamps are milliseconds; `gu.hoi_chieu`, effect durations, and CN rates in
-the catalog use seconds. Returns include `ok`, `reason` on failure, and an
-`unsupported` list. Slot indices are zero based, as in the recovered client.
+Only combat.mjs, test-combat.mjs, this document and reports/COMBAT-V3.md belong
+to this task. Runtime, story, actorstats, inventory, encounters and rewards are
+host-owned. No builds, commits or publication.
 
-Remove the old hardcoded attack and guard drain when integrating. For the old
-room implementation, also replace its beast combat/respawn loop with engine
-`tick`. If the host has a new enemy loop, set `room.combatOwnsBeasts = false` to
-disable engine pursuit/retaliation/respawns; continue calling `tick` for effects
-and held CN. Have the host enemy loop call `receiveDamage(rawAmount, actor.id,
-now)` instead of subtracting HP: this applies reduction, absorbs shields, emits
-FX, handles lethal cleanup, and refreshes profile state. Do not pre-reduce that
-amount or also subtract HP. `getDamageReduction()` returns the strongest active
-fraction (e.g. `.5`), for UI or other damage calculations; it does not consume
-shields. Keep meditation, world events, periodic saving, and state broadcast
-in the host. The engine does not run a multiplayer server or
-damage NPCs, players other than the room hero, companions, or dead entities.
-Host input/movement must respect `player.hieuUng` (`choang`/`troi`) and the
-`tocDo` multiplier. Attack already respects stun; beast AI respects stun/root
-and slow. Integrators must apply these constraints to movement prediction too.
+## Stable API
 
-`room.onCombatAction?.({type, p, gu, ...result})` runs once after each successful
-command (including held on/off) and after refresh/save. Failed commands do not
-advance intro stages through this hook. `room.onKill?.(actor)` runs once per
-lethal hit/DOT before the combat save. When supplied, that callback owns **all
-kill counts, quest/intro progression, and rewards**; the engine never also
-increments `progress.kills` or grants loot. Without a callback the standalone
-fallback increments kills and grants the original local adapter's rewards.
+```js
+const combat = createCombat(room);
+combat.attack(payload, type = 'dung');
+combat.tick(nowMs);
+combat.getDamageReduction(school); // optional school; returns fraction
+combat.receiveDamage(rawAmount, source, nowMs = Date.now()); // returns HP damage
+combat.receiveActorDamage(actor, rawAmount, source, nowMs = Date.now());
+combat.getPassiveBonuses();
+```
 
-Required room members: `data`, `player`, `profile`, `state` (`now`, actors Map),
-`sessionId`, `progress`, `label`, `emit`, `notify`, `changed`, `save`, `refresh`.
-`refresh` runs before combat saves, keeping profile HP/CN consistent. Supported
-casts save once; timer updates use the host's periodic save. `room.guard` is only
-a compatibility boolean; the engine uses actual reduction values. Reconstructed
-beast AI uses the existing local adapter's 8 damage/1.4 seconds, 1.4 m/s pursuit,
-18 second respawn and fallback +12 stones/+1 meat rewards. Death leaves the player at zero
-HP for the host resurrection flow. No automatic heal/revive loop is included.
+`attack` accepts zero-based `{o, muc?, x?, y?}` for `dung`, `o: 'tay'` for hand
+attacks, `{o}` for `sat_chieu`, and `{hd:'goi'|'cat',uid}` for `thu_nha`.
+Results contain `ok`, `reason` on failure, `unsupported`, and applicable
+`gu`, `cn`, `cd`, `bat`, `targets` on success. Partial success can have omissions.
+`source` is an actor ID or `{id, school?, damageType?: 'dot'}`. Pass raw damage
+once; never pre-reduce or also subtract HP externally. `receiveActorDamage`
+accepts the hero, owned companions and living hostile actors, protecting NPCs.
 
-Data and overrides
-------------------
+Required room fields: data, profile, player, state.actors (Map), state.now,
+sessionId, emit, notify, changed, refresh, save, label. All timestamps are absolute
+milliseconds; catalog durations/rates use seconds. Backwards time is ignored.
+Construct once per room and keep calling tick even when host AI owns enemies.
 
-The primary source is `/workspace/work/cotienlo-expand/live-game.json`: 377 Gu,
-55 zones, 23 killer moves, plus `guGiacMo`. The older
-`/workspace/cotienlo-recovered/public/data/game.json` has only 276 Gu. There is no
-embedded Gu ID whitelist; all effects/shapes resolve from **current `room.data`**.
-In a zone starting with `inst_mo` (using `room.zoneId`, falling back to
-`room.state.zoneId`), the engine resolves `{...gu[id], ...guGiacMo[id]}` locally,
-retaining rank, FX and labels from the base. Base data is never mutated. Merged
-spec identity is cached per base/override pair; replace entries when changing
-their definitions rather than mutating definitions in place. Exiting a dream,
-replacing a held Gu spec, or replacing its override cancels its toggle at the
-next combat operation. A host-provided merged catalog is also accepted.
+Fresh mortal rank 0 / HP 300 / CN and CN-max 0 / no Gu or NT is valid. Combat
+never initializes rank, money, inventory or realm stats. Public hand data has
+no rank-zero value: supply `getCombatStats(player).attackDamage` or catalog
+`don_tay.goc.chuyen_0`; otherwise a valid hand target yields explicit
+`unsupported: ['don_tay.chuyen_0']`, without borrowing cultivator damage.
 
-Intro integration is tested with Ngũ chuyển, 5200 HP / 2400 CN and slots
-`ngu_khieu_hoa_thap`, `hoa_long`, `viem_tru`, `lieu_quang`, `dien_nhan`, `viem_duc`,
-plus `satChieuO: ['km_hoa_giao_lieu_nguyen', null]`. Prefix slot Gu IDs with
-`gu_`. `dien_nhan` reconnaissance and killer moves remain explicit unsupported
-features; the other four instant/held combat Gu and flight use their overrides.
+## Hooks and ownership
 
-Slot `cn` is authoritative when finite and nonnegative. If omitted, the engine
-uses the recovered client CN calculation: rank discounts/surcharge in
-`bal.combat`, proficiency discount in `bal.cultivation.thuan_thuc`, percentage
-of `cnMax` for `ti_le_toi_da`, and `ghiDe`. A fallback result is published back
-to the slot; the host must recompute/remove `slot.cn` after rank, proficiency,
-max-CN, or dream changes. `cdMax = spec.hoi_chieu * 1000`, `cd` is an absolute
-deadline, `cnGiay` identifies held rates, and `bat` identifies live toggles.
-Held skills require one second's CN to activate, charge elapsed time with no
-upfront charge, can be switched off during cooldown/stun, and stop at depletion,
-death, unequip or spec replacement. Existing saved `bat` values reset on engine
-creation because transient effects are not saved. Cooldowns remain in slots.
+```js
+room.onCombatAction = ({type, p, gu, ...result}) => {};
+room.onKill = (actor, {source, now, gu, school, owner, companion}) => {};
+```
 
-Supported subset and limits
----------------------------
+onCombatAction runs once per accepted command (also held on/off and pet goi/cat),
+**before the final refresh/save**. Live player/slots are updated; profile HP/CN
+mirrors are synchronized by refresh. Story mutations made by the hook persist
+in that save. Failed commands, timer pulses and autonomous attacks do not call
+it. Do not also count practice/story actions in a second dispatcher hook.
 
-Numeric `hu` entries support direct `sat_thuong.goc`, `hoi_mau.goc`, shields
-(`khien.ti_le_mau`), damage reduction, poison/burn/bleed (`moi_s`), stun, root,
-slow, bounded dispel of engine-owned debuffs, healing over time, sustained
-healing, cast HP costs, direct-hit lifesteal and held flight (`bay`). Flight sets
-`player.canh` to the actual Gu ID, multiplies `tocDo` by `1 + effect.toc`, and
-sets `room.physics.b.quaHo = true` when that bridge exists. Toggle-off, depletion,
-unequip, death, or dream exit restores previous wings, speed and water-crossing
-flag. The host must scale its server-side physics speed from `player.tocDo`,
-matching the recovered client's prediction (about line 200826). Targets follow the catalog's
-single target/projectile, self, circle, ground circle, cone and line shapes.
-Missing line width defaults to 1 metre, matching the recovered FX renderer.
-Projectiles resolve immediately at cast time; there is no projectile simulation,
-collision/line-of-sight or terrain geometry. Healing targets self or living
-`dong_hanh` actors. The client sends its auto-aimed monster even for healing:
-a living hostile selection on a targeted heal means self-heal, and self-centred
-healing circles ignore `muc`. This never heals or damages the selected hostile.
-Omitting `muc` also self-heals. Explicit invalid/NPC/dead IDs for targeted spells
-are rejected. Harmful AoE targets are validated individually, and invalid
-offensive IDs never silently fall back. Empty harmful AoE is rejected free.
+onKill runs once per lethal direct hit, DOT or companion hit, after HP reaches
+zero and status cleanup, before the final save. `source` is the damaging actor
+ID. Spell `gu`/`school` and pet `owner`/`companion` are optional. This callback
+owns ALL kill counts, story/quest progression and rewards. No duplicate loot or
+counts are granted by combat. Without it, only progress.kills increments for
+ordinary beasts; the old fixed +12 NT/+1 meat fallback was removed. Companion
+death never calls onKill. Hooks are synchronous and should not throw.
 
-Base effect amounts are used directly: no claim of original server scaling,
-armor, crit, strength, hunger, higher-rank HP backlash, passive school multipliers
-or synergy formulas.
-Multiple reductions use the strongest value; shields stack per cast source;
-recasting the same slot/effect replaces that status. DOTs/HoTs pulse after their
-first interval, include the final pulse at expiry, and aggregate missed pulses.
-Status duration is capped at 600 seconds, 64 effects per entity, 64 slots, and
-64 effects per cast. AI moves at most one second and attacks at most once per
-tick after a long pause. Time cannot move backwards. Removed/dead actors lose
-statuses, preventing DOTs from crossing respawns. Timer frequency does not change
-sustained CN drain. All temporary state is in memory and bounded by room actors.
+Incoming successful hits call `room.progression?.onEvent('damage',
+{amount: dealtHP, source, now})` to cancel absorption, including direct hits
+fully absorbed by a shield. Dodged hits do not call it. A final save follows
+this callback so a progression cancellation save cannot persist stale HP.
+Story `storyDummy` actors stay at 1 HP, never chase/attack/respawn/reward, and
+still accept training commands. Other noReward actors do not get fallback
+rewards or engine respawn scheduling. introBoss alone is not treated as a dummy.
 
-Every unsupported effect/synergy is returned and reported through `notify`;
-mixed skills apply only supported entries. Unsupported-only skills spend no CN
-and deal no damage. Passive activation, consumable activation (inventory agent
-owns consumption), channelled `niem`, leaf-charge healing, stealth,
-movement, traps, walls, summons, capture, ice stacks and advanced conditional
-effects are intentionally unsupported. Strength-scaled healing and armor-pierce
-modifiers are explicitly reported while their declared base effect can apply.
-All killer moves are rejected explicitly: public `killer` supplies components,
-FX, area tags, cooldown/cast durations, but no numerical effects or CN formula.
-Component Gu are not composed into invented killer damage.
+Set `room.combatOwnsBeasts = false` before combat when encounters owns AI.
+It disables engine pursuit, retaliation AND respawn scheduling. Companion AI
+is also disabled unless `combatOwnsCompanions = true`; false always disables it.
+Host AI should call receiveDamage/receiveActorDamage for its incoming hits.
 
-Readable client reference: `/workspace/work/cotienlo-expand/recovered-current/modules/bundle.js`.
-Search `function yt` / `function bt` for the cost helper (about line 19552),
-`guGiacMo` for dream merging (about line 126862), `cnGiay` for slot cost display
-(about line 132381), and `cdSatChieu` for absolute cooldown display. Hand reach is
-`combat.don_tay.tam_m + noi_tam_m` (about line 195770). The FX handlers at lines
-188762 (`trung`), 188903 (`buff`), 188958 (`duy_tri`), 189005 (`so`), and 189884
-(held aura implementation) supply the field evidence. The FX
-`trung`/`vung`/`vong`/`buff`/`so`/`duy_tri` cases consume `gu`, optional `fx`,
-`tu`, `id`, geometry, duration and toggle fields. Numbers use `loai: dmg`,
-`nhan`, `dot`, `hoi`, `khien`; unknown spell IDs are never emitted as a fake
-Nguyet Quang hit. Original server implementation was not recovered.
+## Actorstats and movement
 
-Run `node scripts/test-combat.mjs`. The tests use a mocked room and can sweep
-an actual catalog with `COMBAT_DATA=/path/to/game.json`; by default they prefer
-the 22 Oct live file, then the repository's built data. No runtime, build,
-profile-defaults or Gu inventory files are changed by this module.
+```js
+room.getCombatStats = (actor, context /* optional {gu,spec} on Gu power */) => ({
+  attackDamage, attackRange, attackCooldownMs, moveSpeed,
+  damageMultiplier, healingMultiplier, damageReduction,
+  schoolMultipliers, stealthDetectionRange,
+});
+```
+
+Fields are optional. Multipliers default to 1, reduction to 0. A snapshot
+replaces standalone equipment defaults. Supplying schoolMultipliers (even {})
+also replaces combat's passive school calculation. Return final school factors
+for context.spec; respect Tiểu Quang's den_chuyen. Without that property combat
+derives school power from equipped, refined, non-resting, well-fed obd Gu:
+strongest non-stacking factor times explicit stacking factors.
+
+getPassiveBonuses returns detached `{attributes, speedBonus, schoolMultipliers,
+effects}`. Attribute fractions apply to REALM BASE stats, per official wiki.
+School aggregates contain unconditional effects; effects retains conditional
+den_chuyen entries. speedBonus uses the strongest value as a conservative local
+stacking policy. Actorstats owns HP/CN/strength/speed application, permanent
+training and equipment totals. Combat never compounds these on refresh.
+Temporary added strength is actor.combatStrength; damage conversion is unknown.
+
+Without a snapshot, existing computed hoCu.tong.cong adds flat hand damage;
+hoCu.da.cs.sat_thuong/giam provide damage/reduction fractions. No equipment
+generation, armor conversion, crit multiplier or upgrade rate is invented.
+Baseline reduction, strongest temporary guard and matching school resistance
+combine multiplicatively, followed by shields. This is an explicit LOCAL
+combination policy, not a recovered server formula.
+
+Runtime movement needs no additional API. Combat already scales tocDo for
+temporary slow/flight; use that field once in physics, not multiplied again by
+combatSpeedMultiplier. Block walking AND dash for choang/troi (or future
+combatStunUntil/combatRootUntil deadlines); phong_khieu blocks attacks, not
+walking. Retain a base speed in actorstats rather than overwriting slowed speed.
+Other published fields: combatBlindUntil, combatStrength, combatIceStacks,
+combatRevealRadius, combatGuLocked, combatShield, combatReduction. Taunt sets
+khieu_khich/nham and restores the old target. Blind prevents auto aim but allows
+explicit aiming. `room.canCombatTarget(attacker,target)` may return false for
+darkness/visibility; combat has no terrain/lighting model.
+
+Dash uses public distance/duration, aim/facing, zone bounds and approximate
+creature collision (0.7 m combined body radius; client body radius is 0.35 m).
+`room.resolveCombatMove(actor,{from,to,effect})` supplies a terrain-valid endpoint
+or null. Combat uses teleport when supplied, otherwise updates actor/physics
+and emits dich; luot FX carries the actual Gu and duration ms. Without the
+bridge dash resolves immediately and does not perform a terrain sweep.
+
+## Companion bridge
+
+Route only client thu_nha goi/cat to combat if combat owns companion lifecycle.
+Host supplies profile.thuNha `{ds,theoToiDa}` and:
+
+```js
+room.createCompanion = (pet, {now, owner, x, y}) => detachedActor;
+room.onCompanionDefeated = (pet, actor, {now}) => {};
+```
+
+Factory actor needs a new ID, finite position and positive HP/max HP. Combat
+stamps loai dong_hanh, combatOwner and combatPetUid, and uses optional
+addActor/removeActor room bridges. Fallback pet attacks require host-supplied
+cong, tam, attackCooldownMs; movement uses supplied tocDo. No pet stat scaling
+is invented. Ownership, follower cap, duplicate calls and injury/refusal are
+validated. Recall clears ra/theo/aid. Death additionally sets combatDefeated;
+host clears it after its recovery flow. Capture, feeding, leveling and mounts
+remain host-owned. No recovery duration is guessed.
+
+## Mechanics and persistence
+
+Supported: direct damage/heal, leaf heal charges, shield/guard, poison/burn/bleed,
+stun/root/slow/blind, cleanse, HP cost, lifesteal, HoT/sustained healing, flight,
+stealth, reveal/marks/ground detection, reflection, school resistance, temporary
+strength/self slow, dash, taunt, Mộc Mị, ice accumulation/detonation and passive
+death prevention. Reflection uses received HP damage/range and excludes DOT,
+self costs and recursion. Flight drops on attacks or incoming direct hits,
+including shielded hits. Stealth breaks on damage caused by the hero.
+
+Mộc Mị uses public melee damage/range/cooldown and permits healing Gu, per wiki.
+Max-HP changes preserve HP fraction as an explicit local restoration policy.
+Death/removal/profile replacement/zone changes clean engine-owned statuses,
+wings and captured physics even after the dream player object is replaced.
+Dream specs merge only in recovered dream scopes; base catalogs stay unchanged.
+
+Client xt strength helper supplies proficiency, bản mệnh and hungry-Gu modifiers.
+Exhausted/resting/unrefined Gu cannot cast. Only equipped bản mệnh gets its
+resonances: extended burn/marks, extra self heal, combat regeneration, taunt
+on hit, public dodge rate excluding DOT, and hand marks. room.random() can
+inject deterministic randomness for that published dodge chance.
+
+Finite nonnegative host slot.cn is authoritative. Otherwise recovered yt/bt
+rank/proficiency/percentage/ghiDe cost rules apply. Engine-computed costs refresh
+on subsequent casts; host costs remain authoritative. Held rates are fixed at
+activation and charge elapsed time without an upfront drain. Depletion,
+unequip, exhaustion, death and spec/profile/zone replacement stop them.
+Slots publish absolute cd, cdMax, cnGiay, bat and leaf la. Saved bat resets on
+construction. profile.combatV3 persists UID-based leaf deadlines and death-
+prevention cooldowns; temporary statuses are not persisted.
+
+## Exact unknowns and limits
+
+No public exact values establish killer CN/damage/niệm-resource formulas;
+armor/strength/crit conversion; poison healing penalty; ice decay/slow/freeze
+duration; very-close stealth detection distance; pet combat/recovery numbers.
+No such rates are fabricated. Ice caps at 64 stacks until detonation, cleanse,
+death or zone cleanup and reports bang.slow_freeze_duration. Warm-only reveal
+requires room.isWarmCreature(actor); otherwise it reports the omitted rule and
+does not reveal unclassified creatures. Ground hearing exposes a radius; it
+does not synthesize unrecovered map-discovery objects. Mark crit rate is unknown.
+Host may supply stealthDetectionRange; otherwise internal AI cannot acquire a
+hidden hero. External AI must enforce its own stealth/taunt/visibility behavior.
+
+All 23 killer recipes validate equipped active/passive/support Gu, alternatives,
+bản mệnh role and active companion requirements, respecting satChieuKhoa.
+Inventory-only Gu do not count. Even a complete recipe returns unsupported
+without CN/CD spending: adding component damage is not a killer formula.
+Dream ghiDe bypasses recipe checks, not missing effect formulas.
+
+Consumable consumption, capture, training/permanent strength, production,
+utility effects, walls, traps, channelled niem and exact crit effects are
+outside combat. Mixed casts report omitted parts; unsupported-only casts spend
+nothing. Projectiles resolve at cast time. Strongest guard/reflection wins.
+DOT/HoT pulses aggregate missed intervals including expiry; long-gap ordering
+against expiring shields is approximate. Legacy beast fallback values remain
+8 damage / 1.4 s, 1.4 m/s and 18 s respawn only without host values: these are
+old local-adapter defaults, not server rates. AI moves at most one second and
+attacks once per tick after pauses. Status/cast/slot caps are 64 and ordinary
+timed statuses are capped at 600 seconds.
+
+## Tests and evidence
+
+Run `node scripts/test-combat.mjs`; COMBAT_DATA selects another actual catalog.
+Default dist/data/game.json has 377 Gu and identical Gu definitions to the
+recovered live-game snapshot. The 42 groups cover latest Gu, regressions,
+host integration, rank zero, dream isolation, dummy practice and absorption.
+The sweep accepts 266 Gu (248 without reported omissions, 18 partial), and
+explicitly rejects 111 manual activations, including 44 passive Gu whose
+automatic effects must not be counted as failed passive behavior.
+
+Evidence and complete 50-family schema review are in reports/COMBAT-V3.md.
+Primary sources: recovered-current/modules/bundle.js; dist/data/game.json and
+text_vi.json; official generated 22 October wiki:
+https://cotienlo.com/wiki/tn/chien_dau.html,
+https://cotienlo.com/wiki/tn/sat_chieu.html,
+https://cotienlo.com/wiki/tn/nuoi_co.html,
+https://cotienlo.com/wiki/tn/co_doi_chi_so.html,
+https://cotienlo.com/wiki/tn/thu_nha.html,
+https://cotienlo.com/wiki/tn/ho_cu.html.

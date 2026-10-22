@@ -163,3 +163,12 @@ export function createProfile(name = 'Đạo Hữu', gender = 'nam', color = '')
     push: { dangKy: false, khoa: '' },
   };
 }
+
+// Observed fresh guest after waking, 22 Oct 2026. Legacy saves retain their
+// earned/starter inventory; only newly created characters use this profile.
+export function createMortalProfile(name,gender,color){
+ const h=createProfile(name,gender,color);
+ Object.assign(h,{chuyen:0,tv:{chuyen:0,giai:0,diem:0,can:0},hp:300,hpMax:300,cn:0,cnMax:0,nt:0,nguyenThach:0,co:[],o:Array.from({length:4},()=>({uid:null,loai:null,cd:0,cdMax:0})),obd:[null],opt:[null],soO:[4,1],soOPhuTro:1,tui:{},mo:[],flags:[],xong:[]});
+ h.nghe={ds:[],toiDaChinh:2,matKhiBo:.2};h.oDuongCo={so:2,o:[null,null]};
+ return h;
+}

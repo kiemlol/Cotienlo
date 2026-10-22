@@ -3,322 +3,310 @@ import {readFile} from 'node:fs/promises';
 import {test} from 'node:test';
 import {attachGuInventory} from '../src/systems/gu-inventory.mjs';
 
-// No browser/runtime/server required. Optional argument checks another captured
-// first-party game.json, e.g. cotienlo-expand/live-game.json, without copying it.
 const data = JSON.parse(await readFile(process.argv[2] ?? new URL('../dist/data/game.json', import.meta.url), 'utf8'));
-const START = 1_800_000_000_000;
-const DAY = 86_400_000;
-const realNow = Date.now;
+const START = 1_800_000_000_000, HOUR = 3_600_000, DAY = 24 * HOUR;
 let clock = START;
+const realNow = Date.now;
 Date.now = () => clock;
 process.on('exit', () => { Date.now = realNow; });
-
-function gu(uid, loai, extra = {}) {
-  assert.ok(data.gu[loai], `real Gu ID: ${loai}`);
-  return {uid, loai, banMenh: false, luyenHoa: true, no: 100, xp: 0, thuanThuc: 0, buaToi: clock + DAY, nghi: null, ...extra};
-}
-
+const gu = (uid, loai, extra = {}) => ({uid, loai, banMenh: false, luyenHoa: true, no: 100,
+  xp: 0, thuanThuc: 0, buaToi: clock + DAY, nghi: null, ...extra});
 const slot = g => ({uid: g?.uid ?? null, loai: g?.loai ?? null, cd: 0, cdMax: 0, cn: 0, cnGiay: false, bat: false});
 
-function fixture(saved) {
+function fixture(saved, extra = {}) {
   clock = START;
-  const root = gu('root', 'gu_nguyet_quang', {banMenh: true});
-  const shield = gu('shield', 'gu_thu_bi');
-  const heal = gu('heal', 'gu_sinh_tuc_thao');
-  const passive = gu('passive', 'gu_tieu_quang');
-  const profile = saved ?? {chuyen: 1, tv: {chuyen: 1}, nguyenThach: 500, nt: 500, ch: 500,
-    co: [root, shield, heal, passive], o: [slot(root), slot(shield), slot(heal), slot()],
-    obd: [passive.uid, null], opt: [null], tuiToiDa: 40,
-    tui: {item_thit_thu: 10, item_thao_duoc: 10, item_canh_nguyet_lan: 10, item_cao_cam_mau: 5}, vcl: {lh: []}};
-  const room = {data, profile, player: {hp: profile.hp ?? 100, hpMax: 200, cn: profile.cn ?? 1000, cnMax: 1000},
-    messages: [], notices: [], saves: 0, refreshes: 0,
+  const co = [gu('root', 'gu_nguyet_quang', {banMenh: true}), gu('shield', 'gu_thu_bi'),
+    gu('heal', 'gu_sinh_tuc_thao'), gu('passive', 'gu_tieu_quang')];
+  const h = saved ?? {chuyen: 1, tv: {chuyen: 1}, nam: 1, nguyenThach: 500, nt: 500, ch: 500,
+    co, o: [slot(co[0]), slot(co[1]), slot(co[2]), slot()], obd: ['passive', null], opt: [null], tuiToiDa: 40,
+    tui: {item_thit_thu: 10, item_thao_duoc: 10, item_canh_nguyet_lan: 10, item_cao_cam_mau: 5},
+    vcl: {lh: []}, coPhuong: Object.keys(data.recipe), coPhuongTk: [],
+    nghe: {ds: [{id: 'luyen_co', diem: 100, bac: 3, chinh: true}]}};
+  const room = {data, profile: h, zoneId: 'inst_gia_vien', progress: {},
+    player: {hp: h.hp ?? 100, hpMax: 200, cn: h.cn ?? 1000, cnMax: 1000},
+    messages: [], notices: [], events: [], saves: 0, random: () => 0,
     label: (key, fallback) => fallback ?? key,
     emit(type, p) { this.messages.push({type, p: structuredClone(p)}); },
     notify(text) { this.notices.push(text); },
     save() { this.saves++; this.saved = structuredClone(this.profile); },
-    refresh() { this.refreshes++; this.emit('ho_so', this.profile); }};
+    refresh() { this.emit('ho_so', this.profile); },
+    onInventoryEvent(event) { this.events.push(event); }, ...extra};
   const api = attachGuInventory(room);
-  return {room, api, h: profile, p: room.player};
+  api.snapshot();
+  return {room, api, h, p: room.player};
 }
-
 function unchanged(f, type, payload) {
-  const before = f.api.snapshot();
-  const saves = f.room.saves;
+  const before = f.api.snapshot(), saves = f.room.saves;
   assert.equal(f.api.handle(type, payload), true);
-  assert.deepEqual(f.api.snapshot(), before, `${type} rejects without partial mutations`);
+  assert.deepEqual(f.api.snapshot(), before, `${type} rejection is atomic`);
   assert.equal(f.room.saves, saves);
 }
+function setRank(f, n) { f.h.chuyen = n; f.h.tv.chuyen = n; }
+function tick(f, at) { clock = at; f.api.tick(at); }
+function addIngredient(f, id = 'ingredient', loai = 'gu_thiem_quang', extra = {}) {
+  const g = gu(id, loai, extra); f.h.co.push(g); return g;
+}
 
-test('original UI protocol and detached snapshots; combat dispatch stays main-owned', () => {
-  const {api, room, h} = fixture();
-  assert.equal(api.handle('dung', {o: 0, muc: 'enemy'}), false);
-  assert.equal(api.handle('sat_chieu', {o: 0}), false);
-  assert.equal(api.handle('co', {cham: 'root'}), false);
-  assert.equal(api.handle('co', {tha: 'root'}), false, 'latest UI release action is explicitly unsupported');
-  assert.equal(api.handle('unknown', {}), false);
-  api.handle('cua_hang');
-  const shop = room.messages.at(-1);
-  assert.equal(shop.type, 'cua_hang');
-  assert.equal(typeof shop.p.ten, 'string');
-  for (const row of shop.p.mua) {
-    assert.ok(data.gu[row.id] || data.item[row.id]);
-    assert.ok(row.gia > 0 && ['nt', 'ch'].includes(row.tien));
-    assert.equal(typeof row.ten, 'string');
-  }
-  assert.ok(shop.p.ban.every(row => row.co > 0 && row.gia > 0));
-  assert.ok(shop.p.khongThu.some(row => row.id === 'item_cao_cam_mau'));
-  api.handle('che_tao');
-  const panel = room.messages.at(-1);
-  assert.equal(panel.type, 'che_tao');
-  const r = panel.p.ds.find(r => r.ma === 'rc_tieu_quang');
-  assert.ok(r && r.can.every(row => typeof row.ten === 'string' && row.n > 0 && typeof row.co === 'number'));
-  assert.equal(r.ra[0].id, data.recipe.rc_tieu_quang.ra);
-  assert.equal(r.can.find(row => row.id === 'cn').n, data.recipe.rc_tieu_quang.cn);
-  const snap = api.snapshot();
-  snap.co[0].no = 0;
-  snap.tui.item_thit_thu = 0;
-  assert.equal(h.co[0].no, 100);
-  assert.equal(h.tui.item_thit_thu, 10);
-});
-
-test('active/passive/support equip, unique placement, cooldown and slot metadata', () => {
-  const f = fixture(), {api, h} = f;
-  h.o[1].cd = START + 5000;
-  api.handle('co', {lap: 'shield', o: 3, biDong: false});
-  assert.equal(h.o[1].uid, null);
-  assert.equal(h.o[3].uid, 'shield');
-  assert.equal(h.o[3].cn, data.gu.gu_thu_bi.cn);
-  assert.equal(h.o[3].cdMax, data.gu.gu_thu_bi.hoi_chieu * 1000);
-  assert.equal(h.o[3].cnGiay, true);
-  assert.equal(h.o[3].cd, START + 5000);
-  api.handle('co', {go: 3, biDong: false});
-  api.handle('co', {lap: 'shield', o: 1});
-  assert.equal(h.o[1].cd, START + 5000, 'unequip does not reset cooldown');
-  api.handle('co', {lap: 'passive', o: 1, biDong: true});
-  assert.deepEqual(h.obd, [null, 'passive']);
-  api.handle('co', {go: 1, biDong: true});
-  assert.equal(h.obd[1], null);
-  api.handle('co', {lap: 'shield', o: 0, phuTro: true});
-  assert.equal(h.opt[0], 'shield');
-  assert.equal(h.o[1].uid, null);
-  api.handle('co', {go: 0, phuTro: true});
-  assert.equal(h.opt[0], null);
-  assert.ok(f.room.saves > 0 && f.room.refreshes === f.room.saves);
-});
-
-test('equipment rejects invalid indexes, wrong modes, rank, root replacement and unrefined Gu', () => {
+test('wire shapes, detached snapshots, scoped mini and progression boundaries', () => {
   const f = fixture();
-  for (const o of [-1, 99, 0.5, '1', NaN, Infinity]) unchanged(f, 'co', {lap: 'shield', o});
-  for (const p of [{go: 0}, {lap: 'shield', o: 0}, {lap: 'root', o: 3}, {lap: 'passive', o: 1},
-    {lap: 'shield', o: 0, biDong: true}, {lap: 'shield', o: 1, biDong: 'false'},
-    {lap: 'shield', o: 0, biDong: true, phuTro: true}, {lap: 'missing', o: 1},
-    {lap: 'shield', go: 1, o: 2}]) unchanged(f, 'co', p);
-  f.h.co.find(g => g.uid === 'shield').luyenHoa = false;
-  unchanged(f, 'co', {lap: 'shield', o: 3});
-  f.h.co.push(gu('high', 'gu_kim_cuong'));
-  unchanged(f, 'co', {lap: 'high', o: 3});
-});
-
-test('feeding uses published diet alternatives or CN and sends co_an_xong', () => {
-  const {api, h, p, room} = fixture();
-  h.co[0].no = 30;
-  api.handle('co', {an: 'root'});
-  assert.equal(h.tui.item_canh_nguyet_lan, 10 - data.gu.gu_nguyet_quang.an.luong);
-  assert.equal(h.co[0].no, data.bal.gu_food.quy_tac.an_dua_ve);
-  assert.equal(h.co[0].buaToi, START + data.gu.gu_nguyet_quang.an.chu_ky_gio * 3_600_000);
-  assert.deepEqual(room.messages.find(m => m.type === 'co_an_xong').p, {uid: 'root', no: 100});
-  const cn = p.cn;
-  api.handle('co', {an: 'heal'});
-  assert.equal(p.cn, cn - data.gu.gu_sinh_tuc_thao.an.luong);
-  delete h.tui.item_thit_thu;
-  h.tui.item_ca_diec = 2;
-  api.handle('co', {an: 'shield'});
-  assert.equal(h.tui.item_ca_diec, 1, 'fallback diet is a real fish ID');
-});
-
-test('feeding rejects wrong/missing food and CN shortages atomically', () => {
-  const f = fixture();
-  unchanged(f, 'co', {an: 'root', mon: 'item_thao_duoc'});
-  delete f.h.tui.item_canh_nguyet_lan;
-  unchanged(f, 'co', {an: 'root'});
-  f.p.cn = 0;
-  unchanged(f, 'co', {an: 'heal'});
-  unchanged(f, 'co', {an: 'heal', mon: 'item_thit_thu'});
-  f.h.co[1].nghi = {ly: 'xac'};
-  unchanged(f, 'co', {an: 'shield'});
-});
-
-test('hunger is elapsed-time based, persists through reload and ignores repeated/reversed ticks', () => {
-  const f = fixture();
-  clock = START + DAY;
-  f.api.tick(clock);
-  const drop = data.bal.gu_food.quy_tac.giam_moi_chu_ky;
-  assert.equal(f.h.co[0].no, 100 - drop);
-  const snap = f.api.snapshot();
-  f.api.tick(clock);
-  f.api.tick(START);
-  assert.deepEqual(f.api.snapshot(), snap);
-  const restored = fixture(structuredClone(f.h));
-  restored.api.tick(START + DAY * 2);
-  assert.equal(restored.h.co[0].no, 100 - drop * 2);
-  restored.api.tick(START + DAY * 100);
-  assert.equal(restored.h.co[0].no, 0);
-  assert.equal(restored.h.co.length, 4, 'death/rescue is outside this module');
-});
-
-test('local refinement charges both costs once, persists and does not auto-equip', () => {
-  const f = fixture();
-  f.h.co.push(gu('wild', 'gu_sinh_co_diep', {luyenHoa: false}));
-  f.api.handle('co', {luyen: 'wild'});
-  const g = f.h.co.find(g => g.uid === 'wild');
-  assert.equal(g.luyenHoa, true);
-  assert.equal(f.h.nguyenThach, 480);
-  assert.equal(f.h.nt, 480);
-  assert.equal(f.p.cn, 990);
-  assert.ok(f.h.vcl.lh.includes(g.loai));
-  assert.equal(f.h.o.some(s => s.uid === 'wild'), false);
-  unchanged(f, 'co', {luyen: 'wild'});
-  assert.equal(f.room.saved.co.find(g => g.uid === 'wild').luyenHoa, true);
-});
-
-test('refinement shortages do not consume either resource', () => {
-  const f = fixture();
-  f.h.co.push(gu('wild', 'gu_sinh_co_diep', {luyenHoa: false}));
-  f.p.cn = 0;
-  unchanged(f, 'co', {luyen: 'wild'});
-  f.p.cn = 100;
-  f.h.nguyenThach = 0;
-  unchanged(f, 'co', {luyen: 'wild'});
-});
-
-test('medicine consumes one, heals over ticks, clamps HP and restores pending effect', () => {
-  const f = fixture();
-  f.api.handle('dung_do', {id: 'item_cao_cam_mau'});
-  assert.equal(f.h.tui.item_cao_cam_mau, 4);
-  assert.equal(f.p.hp, 100, 'not instant healing');
-  unchanged(f, 'dung_do', {id: 'item_cao_cam_mau'});
-  clock += 2000;
-  f.api.tick(clock);
-  assert.equal(f.p.hp, 116);
-  const restored = fixture(structuredClone(f.h));
-  restored.api.tick(START + 5000);
-  assert.equal(restored.p.hp, 140);
-  assert.equal(restored.h.guInventory.heal, null);
-  restored.p.hp = 198;
-  clock = START + 5000;
-  restored.api.handle('dung', {id: 'item_cao_cam_mau'});
-  restored.api.tick(clock + 10000);
-  assert.equal(restored.p.hp, 200);
-  unchanged(restored, 'dung_do', {id: 'item_cao_cam_mau'});
-  unchanged(restored, 'dung_do', {id: 'item_thao_duoc'});
-});
-
-test('shop buys/sells exact quantities and currencies with refreshed UI rows', () => {
-  const f = fixture();
+  for (const [type, p] of [['dung', {o: 0}], ['sat_chieu', {o: 0}], ['cham_co', {}],
+    ['co', {cham: 'root'}], ['co', {cuu: 'root'}], ['co', {tha: 'root'}], ['mini', {giu: true}],
+    ['mini', {chon: 0}], ['nghe', {}], ['ho_cu', {}], ['unknown', {}]]) assert.equal(f.api.handle(type, p), false);
   f.api.handle('cua_hang');
-  const price = data.bal.economy.gia_mua_npc.item_thit_thu;
-  f.api.handle('mua', {id: 'item_thit_thu', so: 5, gia: 0});
-  assert.equal(f.h.tui.item_thit_thu, 15);
-  assert.equal(f.h.nt, 500 - 10 * price, 'client prices are ignored');
-  f.api.handle('ban', {id: 'item_thit_thu', so: 15});
-  assert.equal(f.h.tui.item_thit_thu, undefined, 'empty stacks are removed');
-  assert.equal(f.h.nt, 500 + 5 * price);
   assert.equal(f.room.messages.at(-1).type, 'cua_hang');
-  const ch = f.h.ch;
-  f.api.handle('mua', {id: 'gu_thu_bi', so: 1});
-  assert.equal(f.h.ch, ch - data.bal.economy.kho_toc.gia.gu_thu_bi);
-  const bought = f.h.co.at(-1);
-  assert.equal(bought.loai, 'gu_thu_bi');
-  assert.equal(bought.luyenHoa, false);
-  assert.equal(typeof bought.uid, 'string');
-  f.api.handle('mua', {id: 'gu_sinh_co_diep', so: 2});
-  const uids = f.h.co.map(g => g.uid);
-  assert.equal(new Set(uids).size, uids.length);
-  const nt = f.h.nt;
-  f.api.handle('ban', {id: 'gu_sinh_co_diep', so: 2});
-  assert.equal(f.h.nt, nt + 2 * data.bal.economy.gia_mua_npc.gu_sinh_co_diep);
-  assert.equal(f.h.co.filter(g => g.loai === 'gu_sinh_co_diep').length, 0);
+  assert.equal(f.room.messages.at(-1).p.loai, 'kho_toc');
+  f.api.handle('che_tao');
+  const row = f.room.messages.at(-1).p.ds.find(r => r.ma === 'rc_tieu_quang');
+  assert.equal(row.can.find(p => p.id === 'cn').n, data.recipe.rc_tieu_quang.cn);
+  assert.equal(row.giay, data.recipe.rc_tieu_quang.thoi_gian_s);
+  assert.equal(row.tiLe, data.recipe.rc_tieu_quang.ti_le_goc);
+  const snap = f.api.snapshot(); snap.co[0].no = 0; snap.tui.item_thit_thu = 0;
+  assert.equal(f.h.co[0].no, 100); assert.equal(f.h.tui.item_thit_thu, 10);
 });
 
-test('shop validates quantity, money, inventory capacity, stock and protected Gu', () => {
+test('equipment preserves cooldown, unique placement and accepts one-use support Gu', () => {
   const f = fixture();
-  for (const so of [0, -1, '5', 1.5, 1000, Infinity, NaN, null]) {
-    unchanged(f, 'mua', {id: 'item_thit_thu', so});
-    unchanged(f, 'ban', {id: 'item_thit_thu', so});
+  f.h.o[1].cd = START + 5000;
+  f.api.handle('co', {lap: 'shield', o: 3});
+  assert.equal(f.h.o[1].uid, null); assert.equal(f.h.o[3].cd, START + 5000);
+  assert.equal(f.h.o[3].cn, data.gu.gu_thu_bi.cn); assert.equal(f.h.o[3].cnGiay, true);
+  f.api.handle('co', {go: 3}); f.api.handle('co', {lap: 'shield', o: 1});
+  assert.equal(f.h.o[1].cd, START + 5000);
+  f.api.handle('co', {lap: 'passive', o: 1, biDong: true});
+  assert.deepEqual(f.h.obd, [null, 'passive']);
+  addIngredient(f, 'leaf', 'gu_sinh_co_diep');
+  f.api.handle('co', {lap: 'leaf', o: 0, phuTro: true});
+  assert.equal(f.h.opt[0], 'leaf');
+  for (const o of [-1, 99, .5, '1', NaN]) unchanged(f, 'co', {lap: 'shield', o});
+  for (const p of [{go: 0}, {lap: 'shield', o: 0}, {lap: 'root', o: 3}, {lap: 'passive', o: 1},
+    {lap: 'shield', o: 1, biDong: 'false'}, {lap: 'shield', go: 1, o: 2}]) unchanged(f, 'co', p);
+});
+
+test('published diets, alternatives, rare meals and CN are charged exactly once', () => {
+  const f = fixture(); f.h.co[0].no = 30;
+  f.api.handle('co', {an: 'root'});
+  assert.equal(f.h.tui.item_canh_nguyet_lan, 10 - data.gu.gu_nguyet_quang.an.luong);
+  assert.equal(f.h.co[0].no, data.bal.gu_food.quy_tac.an_dua_ve);
+  assert.deepEqual(f.room.messages.find(m => m.type === 'co_an_xong').p, {uid: 'root', no: 100});
+  const cn = f.p.cn; f.api.handle('co', {an: 'heal'});
+  assert.equal(f.p.cn, cn - data.gu.gu_sinh_tuc_thao.an.luong);
+  delete f.h.tui.item_thit_thu; f.h.tui.item_ca_diec = 2;
+  f.api.handle('co', {an: 'shield'}); assert.equal(f.h.tui.item_ca_diec, 1);
+  for (const p of [{an: 'root', mon: 'item_thao_duoc'}, {an: 'heal', mon: 'item_thit_thu'}]) unchanged(f, 'co', p);
+  f.p.cn = 0; unchanged(f, 'co', {an: 'heal'});
+  f.h.co[1].nghi = {ly: 'xac', den: START + DAY}; unchanged(f, 'co', {an: 'shield'});
+  const wine = Object.entries(data.gu).find(([, d]) => [d.an?.thuc_an].flat().includes('item_ruou_tram_ngay'));
+  if (wine) {
+    const g = addIngredient(f, 'wine', wine[0]);
+    f.h.tui.item_ruou_tram_ngay = data.gu[g.loai].an.luong;
+    f.api.handle('co', {an: g.uid, mon: 'item_ruou_tram_ngay'});
+    assert.equal(g.buaToi, START + data.bal.gu_food.thuc_an_quy.item_ruou_tram_ngay.bua * data.gu[g.loai].an.chu_ky_gio * HOUR);
+    assert.equal(g.xp, data.bal.gu_food.thuc_an_quy.item_ruou_tram_ngay.xp);
   }
-  for (const id of ['__proto__', 'constructor', 'item_fake', 'item_thao_duoc']) unchanged(f, 'mua', {id});
-  unchanged(f, 'ban', {id: 'item_thit_thu', so: 11});
-  unchanged(f, 'ban', {id: 'gu_thu_bi'});
-  f.h.nguyenThach = 0;
-  unchanged(f, 'mua', {id: 'item_thit_thu'});
-  f.h.ch = 0;
-  unchanged(f, 'mua', {id: 'gu_thu_bi'});
-  f.h.nguyenThach = 500;
-  f.h.tuiToiDa = Object.keys(f.h.tui).length;
-  unchanged(f, 'mua', {id: 'item_ruou_trang'});
-  f.api.handle('mua', {id: 'item_thit_thu'});
-  assert.equal(f.h.tui.item_thit_thu, 11, 'existing stack can grow in a full bag');
 });
 
-test('recipe uses actual IDs, requires all Gu/items/CN and never charges partial costs', () => {
-  const f = fixture();
-  f.h.co.push(gu('ingredient', 'gu_thiem_quang'));
-  const r = data.recipe.rc_tieu_quang;
-  f.api.handle('che_tao');
-  const nt = f.h.nguyenThach, cn = f.p.cn;
-  f.api.handle('che', {ma: 'rc_tieu_quang', so: 1});
-  assert.equal(f.h.co.some(g => g.uid === 'ingredient'), false);
-  assert.equal(f.h.co.at(-1).loai, r.ra);
-  assert.equal(f.h.co.at(-1).luyenHoa, true);
-  assert.equal(f.h.tui.item_canh_nguyet_lan, 10 - r.phu[0].so);
-  assert.equal(f.p.cn, cn - r.cn);
-  assert.equal(f.h.nguyenThach, nt);
-  assert.equal(f.room.messages.at(-1).type, 'che_tao');
-  for (const so of [0, -1, '1', Infinity]) unchanged(f, 'che', {ma: 'rc_tieu_quang', so});
-  unchanged(f, 'che', {ma: 'constructor'});
-  unchanged(f, 'che', {ma: 'rc_ban_menh_cong_2'});
-  unchanged(f, 'che', {ma: 'rc_tieu_quang'});
-  f.h.co.push(gu('ingredient2', 'gu_thiem_quang'));
-  delete f.h.tui.item_canh_nguyet_lan;
-  unchanged(f, 'che', {ma: 'rc_tieu_quang'});
-  f.h.tui.item_canh_nguyet_lan = 100;
-  f.p.cn = 0;
-  unchanged(f, 'che', {ma: 'rc_tieu_quang'});
+test('automatic meals, shared pantry and hunger match across offline/reload ticks', () => {
+  const online = fixture(), offline = fixture();
+  for (const f of [online, offline]) { f.h.tui.item_thit_thu = 2; f.h.tui.item_canh_nguyet_lan = 2; f.p.cn = 0; }
+  for (let hour = 1; hour <= 120; hour++) tick(online, START + hour * HOUR);
+  tick(offline, START + 120 * HOUR);
+  assert.deepEqual(online.h.tui, offline.h.tui);
+  for (const g of online.h.co) {
+    const other = offline.h.co.find(v => v.uid === g.uid);
+    assert.ok(Math.abs(g.no - other.no) < 1e-8);
+    assert.equal(g.buaToi, other.buaToi);
+    assert.deepEqual(g.nghi, other.nghi);
+  }
+  const restored = fixture(structuredClone(offline.h));
+  const before = restored.api.snapshot(); restored.api.tick(START); restored.api.tick(START + 120 * HOUR);
+  assert.deepEqual(restored.api.snapshot(), before);
 });
 
-test('batch recipe aggregates primary and auxiliary copies of the same Gu', () => {
-  const f = fixture();
-  const r = data.recipe.rc_tieu_loi_tho_dau_mau;
-  f.h.chuyen = data.gu[r.ra].chuyen;
-  f.p.cn = r.cn * 5;
-  for (const ingredient of r.phu.filter(p => data.item[p.id])) f.h.tui[ingredient.id] = ingredient.so * 5;
-  for (let i = 0; i < 14; i++) f.h.co.push(gu('copy-' + i, r.chinh));
-  unchanged(f, 'che', {ma: 'rc_tieu_loi_tho_dau_mau', so: 5});
-  f.h.co.push(gu('copy-14', r.chinh));
-  f.api.handle('che', {ma: 'rc_tieu_loi_tho_dau_mau', so: 5});
-  assert.equal(f.h.co.filter(g => g.loai === r.chinh).length, 0);
-  assert.equal(f.h.co.filter(g => g.loai === r.ra).length, 5);
-  assert.equal(f.p.cn, 0);
-  for (const ingredient of r.phu.filter(p => data.item[p.id])) assert.equal(f.h.tui[ingredient.id], undefined);
+test('starvation retains corpse, unequips, expires; root protection and illness hook', () => {
+  const f = fixture(); f.h.tui = {}; f.p.cn = 0;
+  tick(f, START + 7 * DAY);
+  assert.equal(f.h.co.find(g => g.uid === 'shield').nghi.ly, 'xac');
+  assert.equal(f.h.o[1].uid, null);
+  assert.equal(f.h.co[0].nghi, null, 'year-one root stays protected');
+  assert.ok(f.room.events.some(e => e.type === 'gu-death' && e.uid === 'shield'));
+  tick(f, START + 50 * DAY); assert.equal(f.h.co.length, 1);
+  f.h.nam = 2; tick(f, START + 50 * DAY + HOUR);
+  assert.equal(f.h.co.length, 0, 'long-expired root corpse is removed');
+  assert.equal(f.h.guInventory.rootIllness, true);
+  assert.ok(f.room.events.some(e => e.type === 'gu-death' && e.banMenh));
 });
 
-test('pending healing/hunger never reopens panels closed locally by the client', () => {
-  const f = fixture();
-  f.api.handle('cua_hang');
-  f.api.handle('che_tao');
+test('refinement needle/hold succeeds without invented NT charge', () => {
+  const f = fixture(), g = addIngredient(f, 'wild', 'gu_sinh_co_diep', {luyenHoa: false});
+  f.p.cn = 100; f.p.cnMax = 100;
+  f.api.handle('co', {luyen: g.uid}); assert.equal(g.luyenHoa, false);
+  const mini = f.room.messages.findLast(m => m.type === 'mini').p;
+  for (const k of ['kim', 'c', 'w', 'tienDo', 'cn', 'cnMax', 'conLai']) assert.equal(typeof mini[k], 'number');
+  assert.equal(mini.loai, 'luyen_hoa');
+  assert.equal(f.api.handle('mini', {chon: 0}), false);
+  unchanged(f, 'mini', {giu: 'yes'});
+  for (let step = 0; step < 400 && f.h.guInventory.refining; step++) {
+    const s = f.h.guInventory.refining;
+    f.api.handle('mini', {giu: s.kim < s.c}); tick(f, clock + 100);
+  }
+  assert.equal(g.luyenHoa, true); assert.equal(f.h.nt, 500); assert.ok(f.p.cn < 100 && f.p.cn > 0);
+  assert.ok(f.h.vcl.lh.includes(g.loai)); assert.equal(f.h.o.some(s => s.uid === g.uid), false);
+  assert.equal(f.api.handle('mini', {giu: true}), false);
+  assert.ok(f.room.events.some(e => e.type === 'gu-refine' && e.success));
+});
+
+test('refinement rejects shortages, cancels; reload never holds the key offline', () => {
+  const f = fixture(), g = addIngredient(f, 'wild', 'gu_sinh_co_diep', {luyenHoa: false});
+  f.p.cn = 0; unchanged(f, 'co', {luyen: g.uid});
+  f.p.cn = 100; f.h.nguyenThach = 0; f.api.handle('co', {luyen: g.uid});
+  f.api.handle('mini', {giu: true}); f.api.handle('mini', {huy: true});
+  assert.equal(f.h.guInventory.refining, null); assert.equal(g.luyenHoa, false);
+  f.api.handle('co', {luyen: g.uid}); f.api.handle('mini', {giu: true});
+  const restored = fixture(structuredClone(f.h)); assert.equal(restored.h.guInventory.refining.held, false);
+  tick(restored, START + 60_000);
+  assert.equal(restored.h.co.find(v => v.uid === g.uid).luyenHoa, false);
+  assert.equal(restored.h.co.find(v => v.uid === g.uid).nghi.ly, 'bi_thuong');
+});
+
+test('medicine persists bounded healing, never revives or reopens panels', () => {
+  const f = fixture(); f.api.handle('cua_hang'); f.api.handle('che_tao');
   f.api.handle('dung_do', {id: 'item_cao_cam_mau'});
-  f.room.messages.length = 0;
-  f.api.tick(START + 60_000);
-  assert.ok(f.room.messages.every(m => m.type !== 'cua_hang' && m.type !== 'che_tao'));
+  assert.equal(f.h.tui.item_cao_cam_mau, 4); assert.equal(f.p.hp, 100);
+  unchanged(f, 'dung_do', {id: 'item_cao_cam_mau'});
+  tick(f, START + 2000); assert.equal(f.p.hp, 116);
+  const restored = fixture(structuredClone(f.h)); restored.room.messages.length = 0;
+  tick(restored, START + 5000); assert.equal(restored.p.hp, 140);
+  assert.ok(restored.room.messages.every(m => !['che_tao', 'cua_hang'].includes(m.type)));
+  restored.p.hp = 0; unchanged(restored, 'dung_do', {id: 'item_cao_cam_mau'});
 });
 
-test('malformed messages and separate rooms cannot mutate each other', () => {
+test('NPC catalog uses public buy/separate resale prices with fractional carry', () => {
+  const f = fixture(); f.api.handle('cua_hang', {npc: 'npc_ta_toan'});
+  f.api.handle('mua', {id: 'item_thit_thu', so: 5, gia: 0});
+  assert.equal(f.h.nt, 495); assert.equal(f.h.tui.item_thit_thu, 15);
+  f.api.handle('ban', {id: 'item_thit_thu', so: 15});
+  assert.equal(f.h.tui.item_thit_thu, undefined); assert.equal(f.h.nt, 495);
+  assert.equal(f.h.guInventory.saleRemainder, .45);
+  f.h.tui.item_thit_thu = 19; f.api.handle('ban', {id: 'item_thit_thu', so: 19});
+  assert.equal(f.h.nt, 496); assert.equal(f.h.guInventory.saleRemainder, .02);
+  f.api.handle('mua', {id: 'gu_thu_bi'}); assert.equal(f.h.ch, 350);
+  assert.equal(f.h.co.at(-1).luyenHoa, false);
+  f.api.handle('cua_hang', {npc: 'npc_lao_khuyen'});
+  const rows = f.room.messages.at(-1).p.mua;
+  assert.ok(rows.length && rows.every(r => data.gu[r.id].nguon.some(s => s.ma === 'lao_khuyen')));
+  unchanged(f, 'mua', {id: 'gu_thu_bi'}); unchanged(f, 'ban', {id: 'item_thao_duoc'});
+});
+
+test('weekly clan reset Monday 05:00 Vietnam; failed trades are atomic', () => {
+  const f = fixture(); setRank(f, 3); f.h.ch = 100_000;
+  const reset = Date.UTC(2026, 9, 25, 22);
+  clock = reset - 1; f.api.handle('mua', {id: 'gu_kim_cuong'});
+  assert.equal(f.h.co.at(-1).loai, 'gu_kim_cuong'); unchanged(f, 'mua', {id: 'gu_kim_cuong'});
+  clock = reset; f.api.handle('mua', {id: 'gu_kim_cuong'});
+  assert.equal(f.h.co.filter(g => g.loai === 'gu_kim_cuong').length, 2);
+  for (const so of [0, -1, '5', 1.5, 1000, Infinity, NaN, null]) unchanged(f, 'mua', {id: 'item_thit_thu', so});
+  for (const id of ['__proto__', 'constructor', 'item_fake']) unchanged(f, 'mua', {id});
+  f.h.nguyenThach = 0; unchanged(f, 'mua', {id: 'item_thit_thu'});
+  f.h.nguyenThach = 500; f.h.tuiToiDa = Object.keys(f.h.tui).length;
+  unchanged(f, 'mua', {id: 'item_ruou_trang'});
+  f.h.tui.item_tim_cuong_dien_lang = 3; unchanged(f, 'ban', {id: 'item_tim_cuong_dien_lang', so: 3});
+});
+
+test('valid medicine/wearable story NPC menus open documented material-catalog fallback', () => {
+  const f = fixture();
+  for (const npc of ['npc_ta_ninh', 'npc_ban_do_deo']) {
+    const before = structuredClone(f.h), messages = f.room.messages.length;
+    assert.equal(f.api.handle('cua_hang', {npc}), true);
+    const panel = f.room.messages.at(-1);
+    assert.ok(f.room.messages.length > messages);
+    assert.equal(panel.type, 'cua_hang'); assert.equal(panel.p.loai, 'thuong_hoi');
+    assert.ok(panel.p.mua.some(r => r.id === 'item_thit_thu' && r.gia === 1));
+    assert.deepEqual(f.h, before, 'opening a service does not charge or grant goods');
+  }
+});
+
+test('timed synthesis consumes exact inputs/CN, persists primary/mastery and emits quest hook', () => {
+  const f = fixture(), r = data.recipe.rc_tieu_quang;
+  const g = addIngredient(f, 'ingredient', r.chinh, {thuanThuc: 4, xp: 9, sao: 2});
+  f.api.handle('hop_luyen', {hd: 'xem'});
+  assert.equal(f.room.messages.at(-1).p.ds.find(x => x.id === 'rc_tieu_quang').giay, r.thoi_gian_s);
+  f.api.handle('hop_luyen', {hd: 'bat_dau', id: 'rc_tieu_quang', uid: g.uid});
+  assert.equal(g.loai, r.chinh); assert.equal(g.nghi.ly, 'hop_luyen');
+  assert.equal(f.h.tui.item_canh_nguyet_lan, 10 - r.phu[0].so); assert.equal(f.p.cn, 1000 - r.cn);
+  unchanged(f, 'che', {ma: 'rc_tieu_quang'});
+  const restored = fixture(structuredClone(f.h)); tick(restored, START + r.thoi_gian_s * 1000);
+  const result = restored.h.co.find(v => v.uid === g.uid);
+  assert.equal(result.loai, r.ra); assert.equal(result.thuanThuc, 4); assert.equal(result.xp, 9); assert.equal(result.sao, 2);
+  assert.equal(restored.h.guInventory.jobs.length, 0);
+  assert.ok(restored.room.events.some(e => e.type === 'craft' && e.success));
+});
+
+test('failed synthesis loses auxiliaries but retains primary with 24-hour injury', () => {
+  const f = fixture(undefined, {random: () => .999}), r = data.recipe.rc_tieu_quang;
+  const g = addIngredient(f); f.api.handle('che', {ma: 'rc_tieu_quang'});
+  tick(f, START + r.thoi_gian_s * 1000);
+  assert.equal(g.loai, r.chinh); assert.equal(g.nghi.ly, 'bi_thuong');
+  assert.equal(g.nghi.den, START + r.thoi_gian_s * 1000 + DAY);
+  assert.equal(f.h.tui.item_canh_nguyet_lan, 7); unchanged(f, 'che', {ma: 'rc_tieu_quang'});
+  tick(f, g.nghi.den); assert.equal(g.nghi, null);
+});
+
+test('batch recipes aggregate repeated Gu IDs before spending anything', () => {
+  const f = fixture(undefined, {inventoryRules: {synthesis: {slots: 5}}}), r = data.recipe.rc_tieu_loi_tho_dau_mau;
+  setRank(f, data.gu[r.ra].chuyen); f.p.cn = r.cn * 5;
+  for (const p of r.phu.filter(p => data.item[p.id])) f.h.tui[p.id] = p.so * 5;
+  for (let i = 0; i < 14; i++) addIngredient(f, 'copy-' + i, r.chinh);
+  unchanged(f, 'che', {ma: 'rc_tieu_loi_tho_dau_mau', so: 5}); addIngredient(f, 'copy-14', r.chinh);
+  f.api.handle('che', {ma: 'rc_tieu_loi_tho_dau_mau', so: 5});
+  assert.equal(f.h.co.filter(g => g.loai === r.chinh).length, 5); assert.equal(f.p.cn, 0);
+  tick(f, START + r.thoi_gian_s * 1000); assert.equal(f.h.co.filter(g => g.loai === r.ra).length, 5);
+});
+
+test('root recipe always succeeds; knowledge, location, rank, costs checked first', () => {
+  const f = fixture(undefined, {random: () => .999}), r = data.recipe.rc_ban_menh_thu_2;
+  setRank(f, 2); const g = f.h.co.find(g => g.uid === 'shield'); g.banMenh = true;
+  for (const p of r.phu) f.h.tui[p.id] = p.so;
+  f.h.coPhuong = []; unchanged(f, 'che', {ma: 'rc_ban_menh_thu_2'});
+  f.h.coPhuong = ['rc_ban_menh_thu_2']; f.room.zoneId = 'zone_ta_gia_trai';
+  unchanged(f, 'che', {ma: 'rc_ban_menh_thu_2'}); f.room.zoneId = 'inst_gia_vien';
+  f.p.cn = 0; unchanged(f, 'che', {ma: 'rc_ban_menh_thu_2'}); f.p.cn = 1000;
+  f.api.handle('che', {ma: 'rc_ban_menh_thu_2'}); tick(f, START + r.thoi_gian_s * 1000);
+  assert.equal(g.loai, r.ra); assert.equal(g.banMenh, true);
+});
+
+test('intro and profile replacement cannot damage base save or retain stale pointers', () => {
+  const f = fixture(), base = structuredClone(f.h);
+  f.room.intro = {active: true, baseProfile: base}; f.room.zoneId = 'inst_mo_dau';
+  const before = structuredClone(f.h);
+  f.api.handle('mua', {id: 'item_thit_thu'}); f.api.handle('co', {an: 'root'});
+  assert.equal(f.api.handle('mini', {giu: true}), false); tick(f, START + 100 * DAY);
+  assert.deepEqual(f.h, before); assert.deepEqual(f.room.intro.baseProfile, base);
+  f.room.intro.active = false; f.room.zoneId = 'zone_ta_gia_trai'; f.room.profile = structuredClone(base);
+  f.api.handle('mua', {id: 'item_thit_thu'});
+  assert.equal(f.room.profile.tui.item_thit_thu, 11); assert.equal(f.h.tui.item_thit_thu, 10);
+});
+
+test('explicit profession bridge, hook errors, malformed messages and room isolation', () => {
   const a = fixture(), b = fixture();
   for (const p of [null, [], 0, 'bad']) unchanged(a, 'mua', p);
+  a.room.inventoryCraft = p => p.ma === 'wiki:medicine';
+  assert.equal(a.api.handle('che', {ma: 'wiki:medicine'}), true);
+  a.room.onInventoryEvent = () => { throw Error('quest hook'); };
   a.api.handle('mua', {id: 'gu_sinh_co_diep'});
-  assert.equal(a.h.co.length, 5);
-  assert.equal(b.h.co.length, 4);
-  const c = fixture(structuredClone(a.h));
-  c.api.handle('mua', {id: 'gu_sinh_co_diep'});
-  assert.equal(new Set(c.h.co.map(g => g.uid)).size, c.h.co.length, 'UID sequence survives reload');
+  assert.equal(a.h.co.length, 5); assert.equal(b.h.co.length, 4);
+  assert.ok(a.room.saved); assert.ok(a.room.notices.some(s => s.includes('nhiệm vụ')));
+});
+
+test('fresh mortal rank zero stays empty and cannot refine or buy clan Gu before awakening', () => {
+  const f = fixture({chuyen: 0, tv: {chuyen: 0}, hp: 300, hpMax: 300, cn: 0, cnMax: 0,
+    nt: 0, nguyenThach: 0, ch: 0, co: [], o: [], obd: [], opt: [], tui: {}});
+  const before = structuredClone(f.h);
+  tick(f, START + DAY);
+  assert.deepEqual(f.h, before);
+  assert.equal(f.api.handle('mini', {giu: true}), false);
+  unchanged(f, 'mua', {id: 'gu_thu_bi'});
+  addIngredient(f, 'first', 'gu_thu_bi', {luyenHoa: false});
+  f.p.cn = 100;
+  unchanged(f, 'co', {luyen: 'first'});
+  assert.equal(f.h.nt, 0); assert.equal(f.h.o.length, 0);
 });

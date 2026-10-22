@@ -7,8 +7,8 @@ let time = 100_000;
 const originalNow = Date.now;
 Date.now = () => time;
 const catalogPaths = process.env.COMBAT_DATA ? [process.env.COMBAT_DATA] : [
-  '/workspace/work/cotienlo-expand/live-game.json',
   fileURLToPath(new URL('../dist/data/game.json', import.meta.url)),
+  '/workspace/work/cotienlo-expand/live-game.json',
 ];
 let actual, catalogPath;
 for (const path of catalogPaths) {
@@ -46,6 +46,12 @@ function setup(gu = actual.gu, bal = actual.bal) {
     r.profile.o[index] = slot;
     r.profile.co.push({uid: slot.uid, loai, thuanThuc: 0});
     return index;
+  };
+  r.passive = (loai, extra = {}) => {
+    const uid = `passive-${r.profile.co.length}`;
+    r.profile.co.push({uid, loai, luyenHoa: true, no: 100, ...extra});
+    (r.profile.obd ||= []).push(uid);
+    return r.profile.co.at(-1);
   };
   r.add = a => { r.state.actors.set(a.id, a); return a; };
   r.step = ms => { time += ms; r.combat.tick(time); };
@@ -173,7 +179,7 @@ try {
     r.combat.attack({o: i, muc: 'a'}); assert.equal(a.hp, 35);
     r.step(999); assert.equal(a.hp, 35); r.step(1); assert.equal(a.hp, 25);
     r.step(3000); assert.equal(a.hp, 0); assert.equal(r.progress.kills, 1);
-    assert.equal(r.profile.nguyenThach, 12); assert.equal(r.profile.tui.item_thit_thu, 1);
+    assert.equal(r.profile.nguyenThach, 0); assert.equal(r.profile.tui.item_thit_thu, undefined, 'progression alone supplies loot');
     assert.equal(r.saves.at(-1).hp, r.player.hp);
     r.step(18000); assert.equal(a.hp, 45); r.step(1000000); assert.equal(a.hp, 45);
     assert.equal(r.progress.kills, 1); assert.equal(a.hieuUng, '');
@@ -227,26 +233,29 @@ try {
     assert.equal(clean.player.hieuUng, 'external');
   });
 
-  test('unsupported-only, passive, leaf charges, consumables, channels and killer spend nothing', () => {
+  test('unsupported-only, manual passive, consumables, channels and incomplete killer spend nothing', () => {
     const r = setup(); r.add(actor('a'));
-    for (const gu of ['gu_an_lan', 'gu_tieu_quang', 'gu_hoa_du', 'gu_luu_tinh', 'gu_tieu_sinh_co_thao']) {
+    for (const gu of ['gu_tieu_quang', 'gu_hoa_du', 'gu_luu_tinh']) {
       const i = r.equip(gu, 1), result = r.combat.attack({o: i, muc: 'a', x: 1, y: 0});
       assert.equal(result.reason, 'unsupported', gu); assert.ok(result.unsupported.length);
       assert.equal(r.profile.o[i].cd, 0);
     }
     r.profile.satChieuO = [Object.keys(actual.killer)[0]];
+    assert.equal(r.combat.attack({o: 0}, 'sat_chieu').reason, 'components');
+    r.profile.ghiDe = true;
     assert.equal(r.combat.attack({o: 0}, 'sat_chieu').reason, 'unsupported');
     assert.equal(r.player.cn, 100); assert.equal(r.state.actors.get('a').hp, 1000);
     assert.ok(r.notices.some(n => n.includes('thiếu công thức')));
   });
 
   test('mixed unsupported effects report their names and never synthesize extra damage', () => {
-    const r = setup({mixed: spec([{loai: 'sat_thuong', goc: 11}, {loai: 'no_bang', moi_tang: 999}], undefined, {cong_huong: [{loai: 'future_synergy'}]})});
+    const r = setup({mixed: spec([{loai: 'sat_thuong', goc: 11}, {loai: 'future_effect', moi_tang: 999}], undefined, {cong_huong: [{loai: 'future_synergy'}]})});
     const i = r.equip('mixed', 8), a = r.add(actor('a'));
+    r.profile.co[0].banMenh = true;
     const result = r.combat.attack({o: i, muc: 'a'});
-    assert.equal(result.ok, true); assert.equal(a.hp, 989);
-    assert.deepEqual(result.unsupported, ['no_bang', 'cong_huong.future_synergy']);
-    assert.ok(r.notices.some(n => n.includes('no_bang')));
+    assert.equal(result.ok, true); near(a.hp, 1000 - 12.1);
+    assert.deepEqual(result.unsupported, ['future_effect', 'cong_huong.future_synergy']);
+    assert.ok(r.notices.some(n => n.includes('future_effect')));
   });
 
   test('deletion/object replacement, repeated ticks, backwards time and large gaps remain bounded', () => {
@@ -312,10 +321,10 @@ try {
     assert.equal(r.profile.o[i].bat, false); assert.equal(r.player.canh, '');
   });
 
-  test('host callbacks own progress/rewards once and combat actions fire only on accepted commands', () => {
+  test('host callbacks own progress/rewards once and combat actions persist only accepted commands', () => {
     const r = setup({hit: spec([{loai: 'sat_thuong', goc: 100}])});
     const actions = [], kills = [];
-    r.onCombatAction = action => actions.push(action);
+    r.onCombatAction = action => { actions.push(action); r.profile.storyActions = (r.profile.storyActions || 0) + 1; };
     r.onKill = a => { kills.push(a); r.progress.kills++; };
     const i = r.equip('hit', 0), a = r.add(actor('a', 1, 0, {hp: 50, hpMax: 50}));
     assert.equal(r.combat.attack({o: i, muc: 'a'}).ok, true);
@@ -323,6 +332,7 @@ try {
     assert.equal(r.profile.nguyenThach, 0); assert.equal(r.profile.tui.item_thit_thu, undefined);
     assert.equal(actions.length, 1); assert.equal(actions[0].type, 'dung');
     assert.equal(actions[0].gu, 'hit'); assert.equal(actions[0].p.muc, 'a');
+    assert.equal(r.saves.at(-1).storyActions, 1, 'story callback is captured by the final combat save');
     r.combat.attack({o: i, muc: 'a'}); r.step(1000); assert.equal(actions.length, 1); assert.equal(kills.length, 1);
     const guard = r.equip('guard', 0); r.data.gu.guard = spec([{loai: 'giam_sat_thuong', gia_tri: .2}], null, {kich_hoat: 'duy_tri'});
     r.combat.attack({o: guard}); r.combat.attack({o: guard});
@@ -344,8 +354,301 @@ try {
     assert.equal(r.combat.receiveDamage(-1, 'a'), 0);
   });
 
+  test('client strength helper applies proficiency, birth Gu, hunger, school and published equipment totals once', () => {
+    const r = setup(), i = r.equip('gu_nguyet_quang', 0), a = r.add(actor('a', 5));
+    Object.assign(r.profile.co[0], {thuanThuc: 2, banMenh: true, no: 20});
+    r.passive('gu_tieu_quang'); r.passive('gu_tieu_quang');
+    r.profile.hoCu = {tong: {cong: 4}, da: {cs: {sat_thuong: .1, giam: .05}}};
+    r.combat.attack({o: i, muc: 'a'});
+    near(1000 - a.hp, 39 * 1.06 * 1.1 * .8 * 2 * 1.1);
+    near(r.combat.getDamageReduction(), .05);
+    r.step(1000); a.x = 1;
+    const before = a.hp; r.combat.attack({o: 'tay', muc: 'a'});
+    near(before - a.hp, (6.5 + 4) * 1.1);
+    r.step(1200);
+    r.getCombatStats = a => a === r.player ? {damageMultiplier: 1.2, damageReduction: .2, schoolMultipliers: {nguyet: 1.5}, attackDamage: 13} : {};
+    const hp = a.hp; r.combat.attack({o: i, muc: 'a'});
+    near(hp - a.hp, 39 * 1.06 * 1.1 * .8 * 1.5 * 1.2, 'host replaces equipment and school defaults');
+    near(r.combat.getDamageReduction(), .2);
+  });
+
+  test('only equipped, refined, well-fed passive Gu contribute; support slots never apply passives', () => {
+    const r = setup();
+    r.passive('gu_ban_thach_the'); const hungry = r.passive('gu_boi_huyet', {no: 29});
+    r.passive('gu_hoa_mao_tam_truong'); r.passive('gu_viem_tam');
+    const inactive = r.passive('gu_truy_phong', {luyenHoa: false});
+    r.profile.opt = [inactive.uid]; r.profile.obd.pop();
+    const b = r.combat.getPassiveBonuses();
+    near(b.attributes.sinh_luc_toi_da, .3); near(b.attributes.cn_toi_da, -.15);
+    near(b.schoolMultipliers.viem, 1.15 * 1.15); assert.equal(b.speedBonus, 0);
+    assert.equal(r.player.hpMax, 200, 'actorstats applies base-stat percentages');
+    hungry.no = 100; near(r.combat.getPassiveBonuses().attributes.sinh_luc_toi_da, .4);
+    r.profile.obd = []; assert.deepEqual(r.combat.getPassiveBonuses().attributes, {});
+  });
+
+  test('exhausted, resting and unrefined Gu cannot spend; engine-computed CN refreshes after stat changes', () => {
+    const r = setup(), i = r.equip('gu_nguyet_quang'); r.add(actor('a', 5));
+    for (const state of [{no: 0}, {no: 100, nghi: 'dead'}, {nghi: null, luyenHoa: false}]) {
+      Object.assign(r.profile.co[0], state);
+      assert.equal(r.combat.attack({o: i, muc: 'a'}).reason, 'unavailable');
+      assert.equal(r.player.cn, 100);
+    }
+    Object.assign(r.profile.co[0], {luyenHoa: true, no: 100, thuanThuc: 0});
+    near(r.combat.attack({o: i, muc: 'a'}).cn, actual.gu.gu_nguyet_quang.cn);
+    r.step(1000); r.profile.co[0].thuanThuc = 5;
+    near(r.combat.attack({o: i, muc: 'a'}).cn, actual.gu.gu_nguyet_quang.cn * .85);
+    const guard = r.equip('gu_thu_bi', 5); r.combat.attack({o: guard}); const cn = r.player.cn;
+    r.profile.o[guard] = null; r.step(1000); near(r.player.cn, cn, 'invalid held skills do not charge another interval');
+  });
+
+  test('stealth hides from AI, hostile selection respects concealment/reveal, and damage drops stealth', () => {
+    const r = setup(), stealth = r.equip('gu_an_lan', 2), hit = r.equip('gu_nguyet_quang', 0);
+    const a = r.add(actor('a', 1, 0, {aggro: time + 10000}));
+    r.combat.attack({o: stealth}); r.step(500); assert.equal(r.player.hp, 100);
+    assert.ok(r.player.hieuUng.includes('tang_hinh')); near(r.player.cn, 99);
+    r.combat.attack({o: hit, muc: 'a'}); assert.equal(r.profile.o[stealth].bat, false);
+    r.step(1); near(r.player.hp, 92);
+    a.hieuUng = 'tang_hinh'; r.step(1000);
+    assert.equal(r.combat.attack({o: hit, muc: 'a'}).reason, 'target');
+    a.hieuUng += ',danh_dau'; assert.equal(r.combat.attack({o: hit, muc: 'a'}).ok, true);
+    const s = setup(); s.getCombatStats = () => ({stealthDetectionRange: 2});
+    const si = s.equip('gu_an_lan', 0); s.add(actor('close', 1, 0, {aggro: time + 10000}));
+    s.combat.attack({o: si}); s.step(1); near(s.player.hp, 92, 'host supplies the unobserved close-detection distance');
+  });
+
+  test('recon detects hidden actors, limits marks, refreshes in range and preserves external concealment', () => {
+    const r = setup(), i = r.equip('gu_dien_nhan', 0), hit = r.equip('gu_nguyet_quang', 0);
+    const targets = [1, 2, 3, 4].map(n => r.add(actor(`hidden${n}`, n, 0, {hieuUng: 'tang_hinh'})));
+    assert.equal(r.combat.attack({o: i}).ok, true);
+    assert.equal(targets.filter(a => a.hieuUng.includes('danh_dau')).length, 3);
+    assert.equal(r.player.combatRevealRadius, 30);
+    assert.equal(r.combat.attack({o: hit, muc: targets[3].id}).ok, true, 'reveal permits explicit hidden target');
+    r.combat.attack({o: i}); assert.equal(r.player.combatRevealRadius, 0);
+    assert.equal(targets[3].hieuUng, 'tang_hinh');
+    r.step(6000); assert.equal(targets[0].hieuUng, 'tang_hinh');
+  });
+
+  test('blind blocks auto aim, sealing blocks attacks and normal auto aim chooses nearest forward target', () => {
+    const r = setup(), i = r.equip('gu_nguyet_quang', 0);
+    const back = r.add(actor('back', -.5)), front = r.add(actor('front', 2));
+    r.player.hieuUng = 'mu'; assert.equal(r.combat.attack({o: i}).reason, 'blind');
+    assert.equal(r.combat.attack({o: i, muc: 'front'}).ok, true); near(front.hp, 961);
+    r.step(1000); r.player.hieuUng = 'phong_khieu'; assert.equal(r.combat.attack({o: 'tay', muc: 'front'}).reason, 'sealed');
+    r.player.hieuUng = ''; assert.equal(r.combat.attack({o: i}).ok, true); near(front.hp, 922); near(back.hp, 1000);
+  });
+
+  test('dash resolves range, creature obstruction, host terrain bridge, zone bounds and root before spending', () => {
+    const r = setup(), i = r.equip('gu_long_hoan_khuc_khuc', 3);
+    const a = r.add(actor('block', 2));
+    assert.equal(r.combat.attack({o: i, x: 9, y: 0}).ok, true); near(r.player.x, 1.3);
+    assert.equal(a.hp, 1000); assert.ok(r.events.some(e => e.k === 'luot' && e.ms === 200));
+    r.step(10000); r.player.hieuUng = 'troi'; const cn = r.player.cn;
+    assert.equal(r.combat.attack({o: i, x: 9, y: 0}).reason, 'root'); near(r.player.cn, cn);
+    r.player.hieuUng = ''; r.state.actors.clear();
+    r.resolveCombatMove = () => null;
+    assert.equal(r.combat.attack({o: i, x: 9, y: 0}).reason, 'movement'); near(r.player.cn, cn);
+    r.resolveCombatMove = (a, {to}) => ({...to, x: 2});
+    assert.equal(r.combat.attack({o: i, x: 9, y: 0}).ok, true); near(r.player.x, 2);
+    const s = setup(), j = s.equip('gu_long_hoan_khuc_khuc', 0);
+    s.zoneId = 'small'; s.data.zones = {small: {rong: 2, cao: 2}}; s.player.x = s.player.y = 1;
+    s.combat.attack({o: j, x: 20, y: 1}); near(s.player.x, 1.65);
+  });
+
+  test('leaf charges regenerate independently, follow Gu identity across slots and persist across reconstruction', () => {
+    const r = setup(), i = r.equip('gu_tieu_sinh_co_thao', 0);
+    r.combatOwnsBeasts = false;
+    for (let n = 0; n < 3; n++) { r.player.hp = 1; assert.equal(r.combat.attack({o: i}).ok, true); if (n < 2) r.step(2000); }
+    assert.equal(r.profile.o[i].la, 0); r.step(2000);
+    const cn = r.player.cn; assert.equal(r.combat.attack({o: i}).reason, 'charges'); near(r.player.cn, cn);
+    const slot = r.profile.o[i]; r.profile.o[i] = null; r.profile.o[4] = slot;
+    r.combat = createCombat(r); assert.equal(r.combat.attack({o: 4}).reason, 'charges');
+    r.step(6000); assert.equal(slot.la, 1); r.player.hp = 1;
+    assert.equal(r.combat.attack({o: 4}).ok, true); near(r.player.hp, 46);
+    r.step(2000); assert.equal(slot.la, 1, 'second leaf has its own deadline');
+  });
+
+  test('ice adds real stacks, detonates their public bonus, consumes stacks and clears across actor replacement', () => {
+    const r = setup(), i = r.equip('gu_bang_truy', 0), j = r.equip('gu_bang_bao', 0), a = r.add(actor('a', 5));
+    const result = r.combat.attack({o: i, muc: 'a'});
+    assert.ok(result.unsupported.includes('bang.slow_freeze_duration')); assert.equal(a.combatIceStacks, 1);
+    r.step(2000); r.combat.attack({o: i, muc: 'a'}); assert.equal(a.combatIceStacks, 2);
+    const hp = a.hp; r.combat.attack({o: j, muc: 'a'}); near(hp - a.hp, 75 + 2 * 90); assert.equal(a.combatIceStacks, 0);
+    r.step(2000); r.combat.attack({o: i, muc: 'a'});
+    const replacement = actor('a', 5); r.state.actors.set('a', replacement); r.step(1);
+    assert.equal(a.combatIceStacks, 0); assert.equal(replacement.combatIceStacks, undefined);
+  });
+
+  test('temporary strength, self slow, cleanse and taunt restore owned fields at their actual expiry', () => {
+    const r = setup(), i = r.equip('gu_man_luc_thien_nguu', 0), clean = r.equip('gu_tinh_thuy', 0), taunt = r.equip('gu_nhat_khi_kim_quang', 0);
+    const a = r.add(actor('a', 3, 0, {nham: 'old-target'}));
+    r.combat.attack({o: i}); near(r.player.combatStrength, 60); near(r.player.tocDo, .7);
+    r.combat.attack({o: clean}); near(r.player.tocDo, 1); near(r.player.combatStrength, 60);
+    r.combat.attack({o: taunt}); assert.equal(a.nham, 'hero'); assert.ok(a.hieuUng.includes('khieu_khich'));
+    r.combatOwnsBeasts = false; r.step(4000); assert.equal(a.nham, 'old-target');
+    r.step(1000); near(r.player.combatStrength, 0);
+  });
+
+  test('reflection and resistance use incoming raw damage once, range and school, excluding DOT and shield absorption', () => {
+    const r = setup(); r.combatOwnsBeasts = false;
+    const reflect = r.equip('gu_cuong_tong', 0), resist = r.equip('gu_thien_bong', 0);
+    const a = r.add(actor('a', 1)); r.combat.attack({o: reflect}); r.combat.attack({o: resist});
+    near(r.combat.getDamageReduction('nguyet'), 1 - .65 * .5);
+    near(r.combat.receiveDamage(20, {id: 'a', school: 'nguyet'}), 6.5); near(a.hp, 1000 - 6.5 * .25);
+    const hp = a.hp; r.combat.receiveDamage(20, {id: 'a', school: 'nguyet', damageType: 'dot'}); near(a.hp, hp);
+    const shield = r.equip('gu_ne', 0); r.combat.attack({o: shield}); r.combat.receiveDamage(10, 'a'); near(a.hp, hp);
+    a.x = 3; r.combat.receiveDamage(100, 'a'); near(a.hp, hp, 'outside reflection radius');
+  });
+
+  test('Moc Mi transforms max HP by ratio, supplies melee stats, permits heals and restores without compounding', () => {
+    const r = setup(), form = r.equip('gu_moc_mi', 0), heal = r.equip('gu_sinh_tuc_thao', 0), hit = r.equip('gu_nguyet_quang', 0);
+    r.combatOwnsBeasts = false; const a = r.add(actor('a', 2));
+    r.combat.attack({o: form}); near(r.player.hpMax, 280); near(r.player.hp, 140);
+    assert.equal(r.player.combatGuLocked, true);
+    assert.equal(r.combat.attack({o: hit, muc: 'a'}).reason, 'transformed');
+    assert.equal(r.combat.attack({o: heal}).ok, true); near(r.player.hp, 185);
+    r.combat.attack({o: 'tay', muc: 'a'}); near(a.hp, 820);
+    r.step(15000); near(r.player.hpMax, 200); near(r.player.hp, 185 / 1.4); assert.equal(r.player.combatGuLocked, false);
+    assert.equal(r.combat.attack({o: hit, muc: 'a'}).ok, true);
+  });
+
+  test('death prevention uses public HP/cooldown, survives reconstruction and never repeats inside cooldown', () => {
+    const r = setup(); r.combatOwnsBeasts = false; r.passive('gu_bat_tu_thao');
+    r.combat.receiveDamage(1000, 'a'); near(r.player.hp, 1);
+    r.combat = createCombat(r); r.combat.receiveDamage(1000, 'a'); near(r.player.hp, 0);
+    r.player.hp = 100; r.step(600000); r.combat.receiveDamage(1000, 'a'); near(r.player.hp, 1);
+  });
+
+  test('birth Gu resonances are conditional and use exact published healing, DOT duration, dodge and mark rates', () => {
+    const r = setup(), fire = r.equip('gu_dan_khieu_hoa_than', 0); r.combatOwnsBeasts = false;
+    r.profile.co[0].banMenh = true; const a = r.add(actor('a', 5));
+    const hit = r.combat.attack({o: fire, muc: 'a'}); assert.deepEqual(hit.unsupported, []);
+    r.step(6000); near(a.hp, 1000 - 26 * 1.1 - 6 * 3 * 1.1);
+    const h = r.equip('gu_tieu_sinh_co_thao', 0); r.profile.co.at(-1).banMenh = true;
+    r.player.hp = 1; r.combat.attack({o: h}); near(r.player.hp, 1 + 45 * 1.1 * 1.2);
+    const hp = r.player.hp; r.step(1000); near(r.player.hp, hp + 200 * .008);
+    const recon = r.equip('gu_dien_nhan', 0); r.profile.co.at(-1).banMenh = true;
+    r.random = () => .1; near(r.combat.receiveDamage(10, 'a'), 0);
+    const before = r.player.hp; r.combat.receiveDamage(10, {id: 'a', damageType: 'dot'}); near(r.player.hp, before - 10);
+    r.random = () => .9; r.combat.attack({o: 'tay', muc: 'a'}); // too far, no mark
+    a.x = 1; assert.equal(r.combat.attack({o: 'tay', muc: 'a'}).ok, true); assert.ok(a.hieuUng.includes('danh_dau'));
+    r.step(3000); assert.equal(a.hieuUng.includes('danh_dau'), false);
+    assert.equal(r.profile.o[recon].bat, false, 'resonance does not implicitly toggle recon');
+  });
+
+  test('companion protocol validates ownership, cap, injury and stats; fights and routes its kills to progression', () => {
+    const r = setup(); r.combatOwnsBeasts = false; r.combatOwnsCompanions = true;
+    const pets = [{uid: 'pet1', ten: 'Wolf'}, {uid: 'pet2', ten: 'Bear'}];
+    r.profile.thuNha = {ds: pets, theoToiDa: 1};
+    assert.equal(r.combat.attack({hd: 'goi', uid: 'foreign'}, 'thu_nha').reason, 'companion');
+    assert.equal(r.combat.attack({hd: 'goi', uid: 'pet1'}, 'thu_nha').reason, 'unsupported');
+    r.createCompanion = (pet, {x, y}) => actor(`pet-${pet.uid}`, x, y, {cong: 50, tam: 2, attackCooldownMs: 1000, hp: 100, hpMax: 100});
+    const actions = [], kills = []; r.onCombatAction = e => actions.push(e);
+    r.onKill = (a, context) => { kills.push({a, context}); r.profile.nguyenThach += 7; };
+    assert.equal(r.combat.attack({hd: 'goi', uid: 'pet1'}, 'thu_nha').ok, true);
+    assert.equal(r.combat.attack({hd: 'goi', uid: 'pet2'}, 'thu_nha').reason, 'limit');
+    const companion = r.state.actors.get(pets[0].aid);
+    const i = r.equip('gu_nguyet_quang', 0), a = r.add(actor('enemy', 1, 0, {hp: 60, hpMax: 60}));
+    assert.equal(r.combat.attack({o: i, muc: companion.id}).reason, 'target');
+    r.combat.attack({o: i, muc: 'enemy'}); r.step(1);
+    assert.equal(a.hp, 0); assert.equal(kills.length, 1); assert.equal(kills[0].context.companion, 'pet1');
+    assert.equal(kills[0].context.owner, 'hero'); assert.equal(r.profile.nguyenThach, 7); assert.equal(r.progress.kills, 0);
+    r.combat.receiveActorDamage(companion, 1000, 'enemy'); assert.equal(kills.length, 1, 'owned companion death never grants a kill');
+    assert.equal(pets[0].combatDefeated, true); assert.equal(r.state.actors.has(companion.id), false);
+    assert.equal(r.combat.attack({hd: 'goi', uid: 'pet1'}, 'thu_nha').reason, 'unavailable');
+    assert.equal(actions.filter(e => e.type === 'thu_nha').length, 1);
+  });
+
+  test('external AI never receives duplicate companion/beast hits, respawns or rewards; callbacks include lethal source', () => {
+    const r = setup(); r.combatOwnsBeasts = false;
+    r.getCombatStats = a => a === r.player ? {} : {attackDamage: 17, attackRange: 3, attackCooldownMs: 250};
+    const a = r.add(actor('a', 2, 0, {aggro: time + 20000, hp: 30, hpMax: 30}));
+    r.step(500); near(r.player.hp, 100);
+    r.combatOwnsBeasts = true; r.step(1); near(r.player.hp, 83);
+    r.step(249); near(r.player.hp, 83); r.step(1); near(r.player.hp, 66);
+    r.combatOwnsBeasts = false; const kills = [];
+    r.onKill = (a, context) => kills.push({a, context});
+    const i = r.equip('gu_nguyet_quang', 0); r.combat.attack({o: i, muc: 'a'});
+    assert.equal(kills.length, 1); assert.equal(kills[0].context.gu, 'gu_nguyet_quang');
+    assert.equal(kills[0].context.source, 'hero'); assert.equal(a.respawn, undefined);
+    r.step(20000); near(a.hp, 0); assert.equal(kills.length, 1);
+  });
+
+  test('killer validation distinguishes equipped alternatives/support slots from inventory-only components', () => {
+    const r = setup(); r.profile.satChieuO = ['km_ngoc_bich'];
+    assert.equal(r.combat.attack({o: 0}, 'sat_chieu').reason, 'components');
+    const a = r.equip('gu_bach_ngoc', 0); r.equip('gu_thanh_ti', 0);
+    r.profile.opt = [r.profile.o[a].uid]; r.profile.o[a] = null;
+    assert.equal(r.combat.attack({o: 0}, 'sat_chieu').reason, 'unsupported', 'complete recipe, missing server effect/CN formula');
+    r.profile.satChieuKhoa = {km_ngoc_bich: 'locked'};
+    assert.equal(r.combat.attack({o: 0}, 'sat_chieu').reason, 'locked');
+    assert.equal(r.player.cn, 100); assert.equal(r.profile.cdSatChieu, undefined);
+  });
+
+  test('zone/profile replacement clears owned effects, forms, summons and held costs without leaking across rooms', () => {
+    const r = setup(), form = r.equip('gu_moc_mi', 0), guard = r.equip('gu_thu_bi', 5);
+    r.combat.attack({o: form}); r.step(15000); r.combat.attack({o: guard});
+    const cn = r.player.cn; r.zoneId = 'new-zone'; r.step(1000);
+    assert.equal(r.profile.o[guard].bat, false); near(r.player.cn, cn); near(r.combat.getDamageReduction(), 0);
+    r.profile = {...r.profile, co: [], o: []}; r.step(1000); assert.equal(r.player.combatGuLocked, false);
+  });
+
+  test('mortal rank zero with empty Gu/CN/NT is inert until host supplies unarmed stats; dream exit never edits base stats', () => {
+    const r = setup();
+    Object.assign(r.player, {chuyen: 0, hp: 300, hpMax: 300, cn: 0, cnMax: 0});
+    r.profile = {chuyen: 0, tv: {chuyen: 0}, co: [], o: [], obd: [], opt: [], tui: {}, nguyenThach: 0, hp: 300, hpMax: 300, cn: 0, cnMax: 0};
+    r.combat = createCombat(r); r.add(actor('a', 1));
+    assert.equal(r.combat.attack({o: 0, muc: 'a'}).reason, 'slot');
+    assert.equal(r.combat.attack({o: 'tay', muc: 'a'}).reason, 'unsupported');
+    r.getCombatStats = a => a === r.player ? {attackDamage: 2} : {};
+    assert.equal(r.combat.attack({o: 'tay', muc: 'a'}).ok, true);
+    near(r.state.actors.get('a').hp, 998);
+    const basePlayer = r.player, baseProfile = r.profile;
+    const savedBase = structuredClone(baseProfile);
+    r.combatOwnsBeasts = false;
+    r.player = actor('hero', 0, 0, {loai: 'nguoi', chuyen: 5, hp: 5200, hpMax: 5200, cn: 2400, cnMax: 2400});
+    r.profile = {...structuredClone(baseProfile), ghiDe: true, chuyen: 5, tv: {chuyen: 5}, co: [], o: []};
+    r.physics = {b: {quaHo: false}};
+    r.zoneId = 'inst_mo_dau'; r.data.guGiacMo = actual.guGiacMo;
+    const flight = r.equip('gu_viem_duc', 10), flown = r.combat.attack({o: flight}); assert.equal(flown.ok, true, JSON.stringify(flown)); r.step(100);
+    assert.equal(r.player.canh, 'gu_viem_duc');
+    r.player = basePlayer; r.profile = baseProfile; r.zoneId = 'zone_ta_gia_trai'; r.step(100);
+    near(r.player.hpMax, 300); near(r.player.hp, 300); near(r.player.cn, 0); near(r.player.cnMax, 0);
+    assert.equal(r.profile.chuyen, 0); assert.deepEqual(r.profile.co, []); assert.deepEqual(r.profile.o, []);
+    assert.equal(r.profile.nguyenThach, 0); assert.deepEqual(r.profile, savedBase);
+    assert.equal(r.physics.b.quaHo, false, 'dream flight restores the captured physics bridge after actor replacement');
+  });
+
+  test('story training dummy stays at 1 HP, grants practice actions, never retaliates/rewards/respawns', () => {
+    const r = setup({training: spec([{loai: 'sat_thuong', goc: 10000}, {loai: 'doc', s: 4, moi_s: 5000}])});
+    const a = r.add(actor('story-training-dummy', 1, 0, {storyDummy: true, noReward: true, introBoss: true, cong: 0, hp: 10000, hpMax: 10000}));
+    const i = r.equip('training', 0), kills = [], actions = [];
+    r.onKill = a => kills.push(a); r.onCombatAction = e => actions.push(e);
+    assert.equal(r.combat.attack({o: i, muc: a.id}).ok, true); near(a.hp, 1);
+    r.step(4000); near(a.hp, 1); near(a.x, 1); near(r.player.hp, 100);
+    assert.equal(r.combat.attack({o: 'tay', muc: a.id}).ok, true); near(a.hp, 1);
+    assert.equal(actions.length, 2); assert.equal(kills.length, 0); assert.equal(r.progress.kills, 0);
+    assert.equal(r.profile.nguyenThach, 0); assert.equal(a.respawn, undefined);
+    a.aggro = time + 100000; a.respawn = time + 1000;
+    r.step(20000); near(a.hp, 1); near(r.player.hp, 100); assert.equal(kills.length, 0);
+  });
+
+  test('incoming hits cancel progression absorption, including shielded hits, and final save mirrors post-hit HP', () => {
+    const r = setup(), events = [];
+    r.progression = {onEvent: (kind, payload) => { events.push({kind, payload}); r.profile.absorbing = false; r.save(); }};
+    r.profile.absorbing = true;
+    near(r.combat.receiveDamage(10, 'enemy'), 10);
+    assert.equal(events.length, 1); assert.equal(events[0].kind, 'damage');
+    assert.equal(events[0].payload.source, 'enemy'); near(events[0].payload.amount, 10);
+    assert.equal(r.saves.at(-1).absorbing, false); near(r.saves.at(-1).hp, 90);
+    const shield = r.equip('gu_ne', 0); r.combat.attack({o: shield}); r.profile.absorbing = true;
+    near(r.combat.receiveDamage(10, 'enemy'), 0); assert.equal(events.length, 2);
+    assert.equal(r.saves.at(-1).absorbing, false); near(r.saves.at(-1).hp, 90);
+  });
+
   test('every actual catalog Gu is handled without generic damage fallback or invalid numbers', () => {
     const supportedIds = [], unsupportedIds = [];
+    const unavailableModes = {}, unavailableEffects = {};
+    let partial = 0;
     for (const [gu, definition] of Object.entries(actual.gu)) {
       const r = setup(), i = r.equip(gu, definition.cn_theo === 'ti_le_toi_da' ? definition.cn * 100 : definition.cn);
       r.player.cn = r.player.cnMax = 100000;
@@ -359,13 +662,16 @@ try {
       const hasDirectDamage = definition.hu?.some(h => h.loai === 'sat_thuong');
       if (!hasDirectDamage) assert.equal(a.hp, 100000, `${gu} must not turn another effect into damage`);
       if (!result.ok) {
+        unavailableModes[definition.kich_hoat] = (unavailableModes[definition.kich_hoat] || 0) + 1;
         unsupportedIds.push(gu); assert.equal(a.hp, 100000, gu); assert.equal(r.player.cn, 100000, gu);
-      } else supportedIds.push(gu);
+      } else { supportedIds.push(gu); if (result.unsupported.length) partial++; }
+      for (const name of new Set(result.unsupported || [])) unavailableEffects[name] = (unavailableEffects[name] || 0) + 1;
       r.step(1000); assert.ok(Number.isFinite(r.player.cn), gu);
     }
     assert.equal(supportedIds.length + unsupportedIds.length, Object.keys(actual.gu).length);
     assert.ok(supportedIds.length > 100, 'substantial actual catalog subset');
     console.log(`Catalog sweep: ${supportedIds.length} accepted; ${unsupportedIds.length} explicitly unavailable; ${catalogPath}`);
+    console.log(`Coverage detail: ${supportedIds.length - partial} without omissions; ${partial} partial; unavailable modes ${JSON.stringify(unavailableModes)}; unavailable effects ${JSON.stringify(unavailableEffects)}`);
   });
   console.log(`Combat tests PASS (${tests} groups).`);
 } finally {
